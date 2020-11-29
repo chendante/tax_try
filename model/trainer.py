@@ -18,8 +18,8 @@ class SupervisedTrainer(BaseTrainer):
     def __init__(self, args):
         super(BaseTrainer, self).__init__(args)
         self.model: model.Frame = model.Frame.from_pretrained_embedding(args.embedding_file_path,
-                                                                 get_inner_model_init_func(args.model_type,
-                                                                                           args.crim_k))
+                                                                        get_inner_model_init_func(args.model_type,
+                                                                                                  args.crim_k))
         self.input_reader = model.InputReader(args.data_path, args.gold_path)
         self.sampler = model.Sampler(self.input_reader.d_words, self.input_reader.g_words, self.model,
                                      batch_size=args.batch_size, padding_max=args.padding_max)
@@ -42,8 +42,7 @@ class SupervisedTrainer(BaseTrainer):
                 optimizer.step()
 
     def save_model(self):
-
-
+        pass
 
     def _training(self):
         pass
