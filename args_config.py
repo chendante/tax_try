@@ -1,20 +1,28 @@
 import argparse
 
 
+def mine_args_parser():
+    arg_parser = argparse.ArgumentParser()
+    _add_common_args_(arg_parser)
+
+    # Input
+    arg_parser.add_argument('--taxo_path', type=str, help="Path to taxonomy path")
+
+    # Train Config
+    arg_parser.add_argument('--epochs', type=int, help="Number of epochs")
+    arg_parser.add_argument('--lr', type=float, default=5e-5, help="Learning rate")
+    return arg_parser
+
+
 def _add_common_args_(arg_parser):
     arg_parser.add_argument('--config', type=str)
 
-    # Input
-    arg_parser.add_argument('--gold_path', type=str, help="Path to gold taxonomy path")
-    arg_parser.add_argument('--data_path', type=str, help="Path to data path")
 
-
-def train_argparser_(arg_parser):
+def train_argparser_():
     arg_parser = argparse.ArgumentParser()
     _add_common_args(arg_parser)
     # Input
-    arg_parser.add_argument('--gold_path', type=str, help="Path to gold taxonomy path")
-    arg_parser.add_argument('--data_path', type=str, help="Path to data path")
+    arg_parser.add_argument('--taxo_path', type=str, help="Path to gold taxonomy path")
     # Logging
     arg_parser.add_argument('--save_path', type=str, help="Path to directory where model checkpoints are stored")
     arg_parser.add_argument('--init_eval', action='store_true', default=False,

@@ -3,6 +3,7 @@ import torch.nn as nn
 import numpy as np
 from torchtext import vocab
 from typing import List, Dict, Set
+import bpemb
 
 
 class Frame(nn.Module):
@@ -51,3 +52,8 @@ class Frame(nn.Module):
         )
         loss = fuc(active_logits, active_targets)
         return loss
+
+
+if __name__ == '__main__':
+    bpemb_en = bpemb.BPEmb(lang='en', vs=10000, add_pad_emb=True)
+    print(bpemb_en.encode("Stratford"))

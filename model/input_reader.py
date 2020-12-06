@@ -1,14 +1,29 @@
-import torch
 import codecs
 import networkx as nx
+import matplotlib.pyplot as plt
+from model.sampler import TaxStruct
 
 
 class InputReader:
-    def __init__(self, train_d_path, train_g_path):
-        with codecs.open(train_g_path, encoding='utf-8') as f:
-            g_lines = f.readlines()
-        self.g_words = [[w.replace(" ", "_") for w in line.strip("\n").split("\t")] for line in g_lines]
-        self.tax_graph = build_taxonomy(self.g_words, threshold=1.0, num_bar=3, add_num_bar=10)
-        with codecs.open(train_d_path, encoding='utf-8') as f:
-            d_lines = f.readlines()
-        self.d_words = [line.strip("\n").split("\t")[0].replace(" ", "_") for line in d_lines]
+    def __init__(self, taxo_path):
+        with codecs.open(taxo_path, encoding='utf-8') as f:
+            taxo_lines = f.readlines()
+        self.taxo_pairs = [[w.replace(" ", "_") for w in line.strip().split("\t")[1:]] for line in taxo_lines]
+        self.taxo_pairs = [(p[1], p[0]) for p in self.taxo_pairs]
+
+
+if __name__ == '__main__':
+    print([1]+[1, 2])
+    # I = InputReader("../data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/science_wordnet_en.taxo")
+    # t = TaxStruct(I.taxo_pairs)
+    # # fig, ax = plt.subplots()
+    # # nx.draw(t, ax=ax)
+    # # plt.show()
+    # t.check_useless_edge()
+    # print("----")
+    # t.check_useless_edge()
+    # print(len(t.nodes), len(t.all_leaf_nodes()))
+    # w_lengths = nx.shortest_path_length(t, t.root)
+    # for node in t.nodes:
+    #     if len(t[node]) == 0:
+    #         print(node, w_lengths[node])

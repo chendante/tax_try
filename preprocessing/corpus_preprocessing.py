@@ -69,5 +69,5 @@ def tag(corpus_path, out_path, voc_path):
 
 if __name__ == '__main__':
     print(tag("../data/raw_data/2A_med_pubmed_tokenized.txt",
-              "../data/preprocessed_corpus/med_connected_lower.txt",
+              "../data/preprocessed/med_connected_lower.txt",
               "../data/raw_data/SemEval2018-Task9/vocabulary/2A.medical.vocabulary.txt"))

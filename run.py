@@ -1,8 +1,16 @@
 import argparse
+import args_config
+import model
+import configparser
 
 
 def _train():
-    pass
+    # args, _ = args_config.mine_args_parser().parse_known_args()
+    args.taxo_path = "./data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/science_wordnet_en.taxo"
+    args.epochs = 200
+    args.lr = 0.01
+    trainer = model.SupervisedTrainer(args)
+    trainer.train()
 
 
 def _eval():
