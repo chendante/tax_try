@@ -5,10 +5,11 @@ import configparser
 
 
 def _train():
-    # args, _ = args_config.mine_args_parser().parse_known_args()
+    args_parser = args_config.mine_args_parser()
+    args, _ = args_parser.parse_known_args()
     args.taxo_path = "./data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/science_wordnet_en.taxo"
-    args.epochs = 200
-    args.lr = 0.01
+    args.epochs = 400
+    args.lr = 0.001
     trainer = model.SupervisedTrainer(args)
     trainer.train()
 

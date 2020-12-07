@@ -32,13 +32,15 @@ class Pat(nn.Module):
 
     @classmethod
     def loss_fuc(cls, pos_score: torch.Tensor, neg_score: torch.Tensor, margin: torch.Tensor):
-        return (-pos_score.clamp(min=cls.EPS) +
-                neg_score.clamp(min=cls.EPS) +
-                margin.squeeze().clamp(min=cls.EPS)).clamp(min=0).sum()
+        loss = (-(pos_score.squeeze().relu().clamp(min=cls.EPS)) +
+                neg_score.squeeze().relu().clamp(min=cls.EPS) +
+                margin.squeeze().relu().clamp(min=cls.EPS)).clamp(min=0)
+        return loss.sum()
+
     @classmethod
     def loss_fuc_no_margin(cls, pos_score: torch.Tensor, neg_score: torch.Tensor):
-        return (-pos_score.clamp(min=cls.EPS) +
-                neg_score.clamp(min=cls.EPS)).clamp(min=0).sum()
+        return (-(pos_score.relu().clamp(min=cls.EPS)) +
+                neg_score.relu().clamp(min=cls.EPS)).clamp(min=0).sum()
 
 
 if __name__ == '__main__':

@@ -76,17 +76,21 @@ class Sampler(Dataset):
         self._tax_graph = TaxStruct(edges)
         leaf_nodes = self._tax_graph.all_leaf_nodes()
         random.seed(0)
-        testing_nodes = random.sample(leaf_nodes, int(len(leaf_nodes) * 0.2))
-        self._tax_graph.remove_nodes_from(testing_nodes)
+        self.testing_nodes = random.sample(leaf_nodes, int(len(leaf_nodes) * 0.2))
+        self.testing_predecessors = [list(self._tax_graph.predecessors(node)) for node in self.testing_nodes]
+        self._tax_graph.remove_nodes_from(self.testing_nodes)
+        # path: leaf -> root
+        self.paths = [list(reversed(path[1:])) for path in self._tax_graph.all_paths()]
+        self.node2path = dict()
+        for p in self.paths:
+            self.node2path[p[0]] = p
         self.sample_paths()
-        # self.data_loader = self._init_data_loader()
 
     def sample_paths(self):
         self._pos_paths = []
         self._neg_paths = []
         self._margins = []
-        paths = [list(reversed(path[1:])) for path in self._tax_graph.all_paths()]
-        for path in paths:
+        for path in self.paths:
             # 这里可以添加根据长度进行sample多少的pos
             self._pos_paths.append(path)
             # 这里添加如何sample neg
@@ -97,6 +101,20 @@ class Sampler(Dataset):
             self._neg_paths.append([neg_node] + path[1:])
             self._margins.append(self._tax_graph.get_margin(path, neg_node))
 
+    def get_eval_data(self):
+        path_group = dict()
+        for node, predecessors in zip(self.testing_nodes, self.testing_predecessors):
+            labels = []
+            testing_paths = []
+            predecessor = predecessors[0]
+            for path in self.paths:
+                if path[0] == predecessor:
+                    labels.append(True)
+                else:
+                    labels.append(False)
+                testing_paths.append([node] + path)
+            path_group[node] = (labels, testing_paths)
+
     def __len__(self):
         return len(self._pos_paths)
 
@@ -104,25 +122,24 @@ class Sampler(Dataset):
         pos = self._pos_paths[item]
         neg = self._neg_paths[item]
         margin = self._margins[item]
-        pos_ids = self._tokenizer.encode_ids(pos)
-        neg_ids = self._tokenizer.encode_ids(neg)
-        pos_pool_matrix = self._get_pooling_matrix(pos_ids)
-        neg_pool_matrix = self._get_pooling_matrix(neg_ids)
-        pos_ids = [pid for ids in pos_ids for pid in ids]
-        neg_ids = [nid for ids in neg_ids for nid in ids]
-        assert len(pos_ids) <= self._padding_max
-        assert len(neg_ids) <= self._padding_max
-        pos_attn_masks = [False] * len(pos_ids) + [True] * (self._padding_max - len(pos_ids))
-        neg_attn_masks = [False] * len(neg_ids) + [True] * (self._padding_max - len(neg_ids))
-        pos_ids.extend([self._padding_id] * (self._padding_max - len(pos_ids)))
-        neg_ids.extend([self._padding_id] * (self._padding_max - len(neg_ids)))
-        return dict(pos_ids=torch.LongTensor(pos_ids),
-                    neg_ids=torch.LongTensor(neg_ids),
+        pos_ids, pos_pool_matrix, pos_attn_masks = self.encode_path(pos)
+        neg_ids, neg_pool_matrix, neg_attn_masks = self.encode_path(neg)
+        return dict(pos_ids=pos_ids,
+                    neg_ids=neg_ids,
                     pos_pool_matrix=pos_pool_matrix,
                     neg_pool_matrix=neg_pool_matrix,
-                    pos_attn_masks=torch.BoolTensor(pos_attn_masks),
-                    neg_attn_masks=torch.BoolTensor(neg_attn_masks),
-                    margin=torch.FloatTensor([margin*0.01]))
+                    pos_attn_masks=pos_attn_masks,
+                    neg_attn_masks=neg_attn_masks,
+                    margin=torch.FloatTensor([margin * 0.1]))
+
+    def encode_path(self, path):
+        ids = self._tokenizer.encode_ids(path)
+        pool_matrix = self._get_pooling_matrix(ids)
+        ids = [eid for id_s in ids for eid in id_s]
+        assert len(ids) <= self._padding_max
+        attn_masks = [False] * len(ids) + [True] * (self._padding_max - len(ids))
+        ids.extend([self._padding_id] * (self._padding_max - len(ids)))
+        return torch.LongTensor(ids), pool_matrix, torch.BoolTensor(attn_masks)
 
     def _get_pooling_matrix(self, ids):
         """
