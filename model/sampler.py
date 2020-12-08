@@ -47,17 +47,30 @@ class TaxStruct(nx.DiGraph):
         # 根据是否只要单一父节点的叶节点可进行更改
         return [node for node in self.nodes.keys() if self.out_degree(node) == 0 and self.in_degree(node) == 1]
 
-    def all_paths(self):
+    def all_paths(self, less_len):
+        """
+        :param less_len: 最小长度
+        :return:
+        """
         paths = []
         for node in self.nodes:
             path = nx.shortest_path(self, source=self.root, target=node)
-            if len(path) > 2:
+            if len(path) > less_len:
                 paths.append(path)
         return paths
 
-    def get_margin(self, path, node):
-        m_path = nx.shortest_path(self, self.root, node)
-        return len(path) + len(m_path) - len(set(path).union(set(m_path)))
+    def all_leaf_paths(self, less_len):
+        paths = []
+        for node in self.all_leaf_nodes():
+            path = nx.shortest_path(self, source=self.root, target=node)
+            if len(path) > less_len:
+                paths.append(path)
+        return paths
+
+    @staticmethod
+    def get_margin(path_a, path_b):
+        com = len(set(path_a).union(set(path_b)))
+        return abs(len(path_a) - com) + abs(len(path_b) - com)
 
 
 class Sampler(Dataset):
@@ -80,9 +93,10 @@ class Sampler(Dataset):
         self.testing_predecessors = [list(self._tax_graph.predecessors(node)) for node in self.testing_nodes]
         self._tax_graph.remove_nodes_from(self.testing_nodes)
         # path: leaf -> root
-        self.paths = [list(reversed(path[1:])) for path in self._tax_graph.all_paths()]
+        self.paths = [list(reversed(path[1:])) for path in self._tax_graph.all_paths(2)]
+        self.att_paths = [list(reversed(path[1:])) for path in self._tax_graph.all_paths(1)]
         self.node2path = dict()
-        for p in self.paths:
+        for p in self.att_paths:
             self.node2path[p[0]] = p
         self.sample_paths()
 
@@ -93,27 +107,50 @@ class Sampler(Dataset):
         for path in self.paths:
             # 这里可以添加根据长度进行sample多少的pos
             self._pos_paths.append(path)
-            # 这里添加如何sample neg
-            while True:
-                neg_node = random.choice(list(self._tax_graph.nodes.keys()))
-                if neg_node not in path and neg_node != self._tax_graph.root:
-                    break
-            self._neg_paths.append([neg_node] + path[1:])
-            self._margins.append(self._tax_graph.get_margin(path, neg_node))
+            neg_path, margin = self.get_neg_path_in_path(path)
+            self._neg_paths.append(neg_path)
+            self._margins.append(margin)
+
+    def get_neg_path_in_node(self, pos_path):
+        """
+        将path的第一个node修改
+        """
+        while True:
+            neg_node = random.choice(list(self._tax_graph.nodes.keys()))
+            if neg_node not in pos_path and neg_node != self._tax_graph.root:
+                break
+        return [neg_node] + pos_path[1:], self._tax_graph.get_margin(pos_path[1:], self.node2path[neg_node][1:])
+
+    def get_neg_path_in_path(self, pos_path):
+        """
+        保留path的第一个node，修改其后的path
+        """
+        while True:
+            neg_node = random.choice(list(self._tax_graph.nodes.keys()))
+            if neg_node != pos_path[0] and neg_node != self._tax_graph.root:
+                break
+        neg_path = self.node2path[neg_node]
+        return pos_path[0:1] + neg_path, self._tax_graph.get_margin(pos_path[1:], neg_path)
 
     def get_eval_data(self):
         path_group = dict()
         for node, predecessors in zip(self.testing_nodes, self.testing_predecessors):
-            labels = []
-            testing_paths = []
+            label = -1
+            ids_list = []
+            pool_matrices = []
+            attn_masks = []
             predecessor = predecessors[0]
-            for path in self.paths:
+            for i, path in enumerate(self.att_paths):
                 if path[0] == predecessor:
-                    labels.append(True)
-                else:
-                    labels.append(False)
-                testing_paths.append([node] + path)
-            path_group[node] = (labels, testing_paths)
+                    label = i
+                ids, pool_matrix, attn_mask = self.encode_path([node] + path)
+                ids_list.append(ids)
+                pool_matrices.append(pool_matrix)
+                attn_masks.append(attn_mask)
+            assert label >= 0
+            path_group[node] = dict(ids=torch.stack(ids_list, dim=0), pool_matrix=torch.stack(pool_matrices, dim=0),
+                                    attn_masks=torch.stack(attn_masks, dim=0), label=label)
+        return path_group
 
     def __len__(self):
         return len(self._pos_paths)

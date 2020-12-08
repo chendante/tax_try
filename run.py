@@ -10,6 +10,8 @@ def _train():
     args.taxo_path = "./data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/science_wordnet_en.taxo"
     args.epochs = 400
     args.lr = 0.001
+    args.embed_dim = 100
+    args.num_heads = 25
     trainer = model.SupervisedTrainer(args)
     trainer.train()
 

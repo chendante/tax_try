@@ -11,7 +11,7 @@ class SupervisedTrainer(object):
     def __init__(self, args):
         # super(BaseTrainer, self).__init__(args)
         self.args = args
-        self.model: Pat = Pat(100)
+        self.model: Pat = Pat(args.embed_dim, args.num_heads)
         self.input_reader = model.InputReader(args.taxo_path)
         self.sampler = model.Sampler(self.input_reader.taxo_pairs, self.model.tokenizer, padding_max=64)
 
@@ -21,6 +21,7 @@ class SupervisedTrainer(object):
         #                                                        verbose=True)
         self.model.cuda()
         for epoch in range(self.args.epochs):
+            self.model.train()
             self.sampler.sample_paths()  # 重新sample negative path
             data_loader = dataloader.DataLoader(self.sampler, batch_size=32, shuffle=True, drop_last=True)
             # for batch in tqdm(data_loader, desc='Train epoch %s' % epoch, total=len(self.sampler)/32):
@@ -45,5 +46,19 @@ class SupervisedTrainer(object):
                 optimizer.step()
                 loss_all += loss.item()
                 # print(loss.item())
-            # scheduler.step(loss_all)
             print(epoch, loss_all)
+            if epoch < 30 or epoch % 5 != 0:
+                continue
+            self.model.eval()
+            testing_data = self.sampler.get_eval_data()
+            count = 0
+            for node, data in testing_data.items():
+                with torch.no_grad():
+                    output = self.model(data["ids"].cuda(), data["pool_matrix"].cuda(), data["attn_masks"].cuda())
+                index = output.squeeze().argmax().cpu()
+                if index == data["label"]:
+                    count += 1
+                    # print("√:" + node)
+                # else:
+                #     print("×:" + node)
+            print("acc:", count / len(testing_data))
