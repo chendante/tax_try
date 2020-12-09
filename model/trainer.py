@@ -47,18 +47,20 @@ class SupervisedTrainer(object):
                 loss_all += loss.item()
                 # print(loss.item())
             print(epoch, loss_all)
-            if epoch < 30 or epoch % 5 != 0:
+            if epoch < 20 or epoch % 5 != 0:
                 continue
             self.model.eval()
             testing_data = self.sampler.get_eval_data()
             count = 0
+            mrr = 0
             for node, data in testing_data.items():
                 with torch.no_grad():
                     output = self.model(data["ids"].cuda(), data["pool_matrix"].cuda(), data["attn_masks"].cuda())
                 index = output.squeeze().argmax().cpu()
+                _, indices = output.squeeze().sort(descending=True)
+                rank = (indices == data["label"]).nonzero().squeeze()
                 if index == data["label"]:
                     count += 1
-                    # print("√:" + node)
-                # else:
-                #     print("×:" + node)
-            print("acc:", count / len(testing_data))
+                mrr += 1.0 / (float(rank) + 1.0)
+            print("acc:", count / float(len(testing_data)))
+            print("mrr:", mrr / float(len(testing_data)))

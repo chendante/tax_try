@@ -94,6 +94,7 @@ class Sampler(Dataset):
         self._tax_graph.remove_nodes_from(self.testing_nodes)
         # path: leaf -> root
         self.paths = [list(reversed(path[1:])) for path in self._tax_graph.all_paths(2)]
+        self.leaf_paths = [list(reversed(path[1:])) for path in self._tax_graph.all_leaf_paths(2)]
         self.att_paths = [list(reversed(path[1:])) for path in self._tax_graph.all_paths(1)]
         self.node2path = dict()
         for p in self.att_paths:
@@ -104,7 +105,7 @@ class Sampler(Dataset):
         self._pos_paths = []
         self._neg_paths = []
         self._margins = []
-        for path in self.paths:
+        for path in self.leaf_paths:
             # 这里可以添加根据长度进行sample多少的pos
             self._pos_paths.append(path)
             neg_path, margin = self.get_neg_path_in_path(path)
