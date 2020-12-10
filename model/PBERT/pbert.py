@@ -1,4 +1,4 @@
-from transformers import *
+from transformers import BertModel, BertPreTrainedModel, BertConfig
 from torch import nn
 import torch
 
