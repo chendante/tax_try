@@ -7,10 +7,15 @@ def mine_args_parser():
 
     # Input
     arg_parser.add_argument('--taxo_path', type=str, help="Path to taxonomy path")
+    arg_parser.add_argument('--pretrained_path', type=str, help="Path to pretrained model")
 
     # Train Config
     arg_parser.add_argument('--epochs', type=int, help="Number of epochs")
     arg_parser.add_argument('--lr', type=float, default=5e-5, help="Learning rate")
+    arg_parser.add_argument('--eps', type=float, default=1e-8, help="Adam Epsilon")
+    arg_parser.add_argument('--num_warmup_steps', type=float, default=1e-8, help="Adam Epsilon")
+    arg_parser.add_argument('--num_training_steps', type=float, default=1e-8, help="Adam Epsilon")
+
     return arg_parser
 
 

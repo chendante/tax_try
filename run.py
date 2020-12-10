@@ -9,9 +9,9 @@ def _train():
     args, _ = args_parser.parse_known_args()
     args.taxo_path = "./data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/science_wordnet_en.taxo"
     args.epochs = 400
-    args.lr = 0.001
-    args.embed_dim = 100
-    args.num_heads = 25
+    args.lr = 5e-5
+    args.eps = 1e-8
+    args.pretrained_path = "bert-base-uncased"
     trainer = model.SupervisedTrainer(args)
     trainer.train()
 

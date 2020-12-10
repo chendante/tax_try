@@ -1,7 +1,4 @@
 import codecs
-import networkx as nx
-import matplotlib.pyplot as plt
-from model.sampler import TaxStruct
 
 
 class InputReader:

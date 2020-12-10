@@ -26,7 +26,9 @@ class Pat(nn.Module):
         output = output.transpose(0, 1)
         # output: (padding, batch_size, embedding)
         output = self.att_layer(output, output, output, key_padding_mask=padding_masks, need_weights=False)[0]
+        # output: (padding, batch_size, embedding)
         output = torch.bmm(pool_matrix.unsqueeze(1), output.transpose(0, 1))
+        # output: (batch_size, 1, embedding)
         output = self.W(output.squeeze())
         return output
 
