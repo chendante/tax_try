@@ -33,8 +33,8 @@ class SupervisedTrainer(object):
 
             for batch in tqdm(data_loader, desc='Train epoch %s' % epoch, total=len(data_loader)):
                 optimizer.zero_grad()
-                loss = self.model(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"],
-                                  pool_matrix=batch["pool_matrix"], labels=batch["labels"])
+                loss = self.model(input_ids=batch["input_ids"].cuda(), attention_mask=batch["attention_mask"].cuda(),
+                                  pool_matrix=batch["pool_matrix"].cuda(), labels=batch["labels"].cuda())
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1)
                 optimizer.step()
