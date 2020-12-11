@@ -9,7 +9,11 @@ class SupervisedTrainer(object):
     def __init__(self, args):
         # super(BaseTrainer, self).__init__(args)
         self.args = args
-        self.model = model.PBert.from_pretrained(args.pretrained_path)
+        self.model = model.PBert.from_pretrained(args.pretrained_path,
+                                                 gradient_checkpointing=True,
+                                                 output_attentions=False,  # 模型是否返回 attentions weights.
+                                                 output_hidden_states=False,  # 模型是否返回所有隐层状态.
+                                                 )
         self.input_reader = model.InputReader(args.taxo_path)
         self.sampler = model.Sampler(self.input_reader.taxo_pairs,
                                      tokenizer=transformers.BertTokenizer.from_pretrained(args.pretrained_path),
