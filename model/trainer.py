@@ -25,7 +25,7 @@ class SupervisedTrainer(object):
         scheduler = transformers.get_linear_schedule_with_warmup(optimizer,
                                                                  num_warmup_steps=0,
                                                                  num_training_steps=len(data_loader) * self.args.epochs)
-        # self.model.cuda()
+        self.model.cuda()
         for epoch in range(self.args.epochs):
             self.model.train()
             self.sampler.sample_paths()  # 重新sample negative path
