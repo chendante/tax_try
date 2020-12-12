@@ -80,8 +80,9 @@ class Sampler(Dataset):
         :param tokenizer:
         :param padding_max:
         """
-        self._labels = []
-        self._training_paths = []
+        self._margins = []
+        self._pos_paths = []
+        self._neg_paths = []
 
         self._padding_max = padding_max
         self._tokenizer = tokenizer
@@ -103,17 +104,27 @@ class Sampler(Dataset):
         self.sample_paths()
 
     def sample_paths(self):
-        self._training_paths = []
-        self._labels = []
-        self._seed += 1
-        random.seed(self._seed)
+        self._margins = []
+        self._pos_paths = []
+        self._neg_paths = []
         for path in self.leaf_paths:
-            self._training_paths.append(path)
-            self._labels.append(1)
-            neg_nodes = random.sample(self._tax_graph.all_leaf_nodes(), 8)
-            for neg_node in neg_nodes:
-                self._training_paths.append(path[0:1] + self.node2path[neg_node])
-                self._labels.append(0)
+            self._pos_paths.append(path)
+            neg_path, margin = self.get_neg_path_in_path(path)
+            self._neg_paths.append(neg_path)
+            self._margins.append(margin)
+
+    # def sample_paths(self):
+    #     self._training_paths = []
+    #     self._labels = []
+    #     self._seed += 1
+    #     random.seed(self._seed)
+    #     for path in self.leaf_paths:
+    #         self._training_paths.append(path)
+    #         self._labels.append(1)
+    #         neg_nodes = random.sample(self._tax_graph.all_leaf_nodes(), 8)
+    #         for neg_node in neg_nodes:
+    #             self._training_paths.append(path[0:1] + self.node2path[neg_node])
+    #             self._labels.append(0)
 
     def get_neg_path_in_node(self, pos_path):
         """
@@ -160,13 +171,28 @@ class Sampler(Dataset):
         return len(self._training_paths)
 
     def __getitem__(self, item):
-        path = self._training_paths[item]
-        label = self._labels[item]
-        input_ids, pool_matrix, attention_mask = self.encode_path(path)
-        return dict(input_ids=input_ids,
-                    pool_matrix=pool_matrix,
-                    attention_mask=attention_mask,
-                    labels=torch.FloatTensor([label]))
+        pos_path = self._pos_paths[item]
+        neg_path = self._neg_paths[item]
+        margin = self._margins[item]
+        pos_ids, pos_pool_matrix, pos_attn_masks = self.encode_path(pos_path)
+        neg_ids, neg_pool_matrix, neg_attn_masks = self.encode_path(neg_path)
+        return dict(pos_ids=pos_ids,
+                    neg_ids=neg_ids,
+                    pos_pool_matrix=pos_pool_matrix,
+                    neg_pool_matrix=neg_pool_matrix,
+                    pos_attn_masks=pos_attn_masks,
+                    neg_attn_masks=neg_attn_masks,
+                    margin=torch.FloatTensor([margin * 0.1]))
+
+    # def __getitem__(self, item):
+    #     # simple
+    #     path = self._training_paths[item]
+    #     label = self._labels[item]
+    #     input_ids, pool_matrix, attention_mask = self.encode_path(path)
+    #     return dict(input_ids=input_ids,
+    #                 pool_matrix=pool_matrix,
+    #                 attention_mask=attention_mask,
+    #                 labels=torch.FloatTensor([label]))
 
     def encode_path(self, path):
         ids = [self._tokenizer.convert_tokens_to_ids(self._tokenizer.tokenize(w)) for w in path]
@@ -182,4 +208,4 @@ class Sampler(Dataset):
         对于attention后的结果，我们只需要有关于query的部分
         """
         return torch.FloatTensor(
-            [0.0] + [1.0 / float(len(ids[1]))] * len(ids[1]) + [0] * (self._padding_max - len(ids[1]) - 1))
+            [0.0] + [1.0 / float(len(ids[0]))] * len(ids[0]) + [0] * (self._padding_max - len(ids[0]) - 1))

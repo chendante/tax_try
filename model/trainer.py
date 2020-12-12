@@ -24,7 +24,7 @@ class SupervisedTrainer(object):
                                        lr=self.args.lr,  # args.learning_rate - default is 5e-5
                                        eps=self.args.eps  # args.adam_epsilon  - default is 1e-8
                                        )
-        data_loader = dataloader.DataLoader(self.sampler, batch_size=32, shuffle=True, drop_last=True)
+        data_loader = dataloader.DataLoader(self.sampler, batch_size=16, shuffle=True, drop_last=True)
         # 创建学习率调度器
         scheduler = transformers.get_linear_schedule_with_warmup(optimizer,
                                                                  num_warmup_steps=0,
@@ -37,8 +37,11 @@ class SupervisedTrainer(object):
 
             for batch in tqdm(data_loader, desc='Train epoch %s' % epoch, total=len(data_loader)):
                 optimizer.zero_grad()
-                loss = self.model(input_ids=batch["input_ids"].cuda(), attention_mask=batch["attention_mask"].cuda(),
-                                  pool_matrix=batch["pool_matrix"].cuda(), labels=batch["labels"].cuda())
+                pos_output = self.model(input_ids=batch["pos_ids"].cuda(), pool_matrix=batch["pos_pool_matrix"].cuda(),
+                                        attention_mask=batch["pos_attn_masks"].cuda())
+                neg_output = self.model(input_ids=batch["neg_ids"].cuda(), pool_matrix=batch["neg_pool_matrix"].cuda(),
+                                        attention_mask=batch["neg_attn_masks"].cuda())
+                loss = self.model.margin_loss_fct(pos_output, neg_output, batch["margin"].cuda())
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1)
                 optimizer.step()

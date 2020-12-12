@@ -4,6 +4,8 @@ import torch
 
 
 class PBert(BertPreTrainedModel):
+    EPS = 1e-9
+
     def __init__(self, config: BertConfig):
         super().__init__(config)
         self.bert = BertModel(config)
