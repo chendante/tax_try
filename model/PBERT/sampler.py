@@ -168,7 +168,7 @@ class Sampler(Dataset):
         return path_group
 
     def __len__(self):
-        return len(self._training_paths)
+        return len(self._pos_paths)
 
     def __getitem__(self, item):
         pos_path = self._pos_paths[item]
