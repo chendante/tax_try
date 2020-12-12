@@ -5,7 +5,7 @@ class InputReader:
     def __init__(self, taxo_path):
         with codecs.open(taxo_path, encoding='utf-8') as f:
             taxo_lines = f.readlines()
-        self.taxo_pairs = [[w.replace(" ", "_") for w in line.strip().split("\t")[1:]] for line in taxo_lines]
+        self.taxo_pairs = [[w for w in line.strip().split("\t")[1:]] for line in taxo_lines]
         self.taxo_pairs = [(p[1], p[0]) for p in self.taxo_pairs]
 
 
