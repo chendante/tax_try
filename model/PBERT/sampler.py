@@ -195,7 +195,7 @@ class Sampler(Dataset):
     #                 labels=torch.FloatTensor([label]))
 
     def encode_path(self, path):
-        ids = [self._tokenizer.tokenize(w) for w in path]
+        ids = [self._tokenizer.convert_tokens_to_ids(self._tokenizer.tokenize(w)) for w in path]
         pool_matrix = self._get_pooling_matrix(ids)
         ids = [self._tokenizer.cls_token_id] + [eid for id_s in ids for eid in id_s] + [self._tokenizer.sep_token_id]
         assert len(ids) <= self._padding_max
