@@ -37,6 +37,7 @@ class PBert(BertPreTrainedModel):
             output_hidden_states=output_hidden_states,
         )
         sequence_output = outputs[0]
+        sequence_output = self.dropout(sequence_output)
         output = torch.bmm(pool_matrix.unsqueeze(1), sequence_output)
         output = self.classifier(output.squeeze())
         if labels is not None:

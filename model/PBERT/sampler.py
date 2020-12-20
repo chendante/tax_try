@@ -60,6 +60,11 @@ class TaxStruct(nx.DiGraph):
         return paths
 
     def all_leaf_paths(self, less_len):
+        """
+        所有到当前叶节点的path
+        :param less_len: 最小长度
+        :return:
+        """
         paths = []
         for node in self.all_leaf_nodes():
             path = nx.shortest_path(self, source=self.root, target=node)
@@ -69,8 +74,16 @@ class TaxStruct(nx.DiGraph):
 
     @staticmethod
     def get_margin(path_a, path_b):
-        com = len(set(path_a).union(set(path_b)))
+        com = len(set(path_a).intersection(set(path_b)))
         return abs(len(path_a) - com) + abs(len(path_b) - com)
+
+    def get_node2full_path(self):
+        node2full_path = {}
+        for node in self.nodes:
+            paths = nx.all_simple_paths(self, source=self.root, target=node)
+            all_nodes = set([node for path in paths for node in path])
+            node2full_path[node] = all_nodes
+        return node2full_path
 
 
 class Sampler(Dataset):
@@ -97,10 +110,14 @@ class Sampler(Dataset):
         # path: leaf -> root paths information init
         self.paths = [list(reversed(path[1:])) for path in self._tax_graph.all_paths(2)]
         self.leaf_paths = [list(reversed(path[1:])) for path in self._tax_graph.all_leaf_paths(2)]
-        self.att_paths = [list(reversed(path[1:])) for path in self._tax_graph.all_paths(1)]
-        self.node2path = dict()
+        # 用于eval部分
+        self.att_paths = [list(reversed(path[1:])) for path in self._tax_graph.all_paths(1)]  # 不带 root
+        self.node2full_path = self._tax_graph.get_node2full_path()
+        self.node2path = dict()  # 不带 root
+        self.index2node = []
         for p in self.att_paths:
             self.node2path[p[0]] = p
+            self.index2node.append(p[0])
         self.sample_paths()
 
     def sample_paths(self):
@@ -112,19 +129,6 @@ class Sampler(Dataset):
             neg_path, margin = self.get_neg_path_in_path(path)
             self._neg_paths.append(neg_path)
             self._margins.append(margin)
-
-    # def sample_paths(self):
-    #     self._training_paths = []
-    #     self._labels = []
-    #     self._seed += 1
-    #     random.seed(self._seed)
-    #     for path in self.leaf_paths:
-    #         self._training_paths.append(path)
-    #         self._labels.append(1)
-    #         neg_nodes = random.sample(self._tax_graph.all_leaf_nodes(), 8)
-    #         for neg_node in neg_nodes:
-    #             self._training_paths.append(path[0:1] + self.node2path[neg_node])
-    #             self._labels.append(0)
 
     def get_neg_path_in_node(self, pos_path):
         """
@@ -146,6 +150,22 @@ class Sampler(Dataset):
                 break
         neg_path = self.node2path[neg_node]
         return pos_path[0:1] + neg_path, self._tax_graph.get_margin(pos_path[1:], neg_path)
+
+    def get_wu_p(self, index_a, index_b):
+        node_a = self.index2node[index_a]
+        node_b = self.index2node[index_b]
+        full_path_a = self.node2full_path[node_a]
+        full_path_b = self.node2full_path[node_b]
+        com = full_path_a.intersection(full_path_b)
+        lca_dep = 0
+        for node in com:
+            if len(self.node2path[node]) > lca_dep:
+                lca_dep = len(self.node2path[node])
+        dep_a = len(self.node2path[node_a])
+        dep_b = len(self.node2path[node_b])
+        res = 2.0 * float(lca_dep) / float(dep_a + dep_b)
+        assert res <= 1
+        return res
 
     def get_eval_data(self):
         path_group = dict()
@@ -183,16 +203,6 @@ class Sampler(Dataset):
                     pos_attn_masks=pos_attn_masks,
                     neg_attn_masks=neg_attn_masks,
                     margin=torch.FloatTensor([margin * 0.1]))
-
-    # def __getitem__(self, item):
-    #     # simple
-    #     path = self._training_paths[item]
-    #     label = self._labels[item]
-    #     input_ids, pool_matrix, attention_mask = self.encode_path(path)
-    #     return dict(input_ids=input_ids,
-    #                 pool_matrix=pool_matrix,
-    #                 attention_mask=attention_mask,
-    #                 labels=torch.FloatTensor([label]))
 
     def encode_path(self, path):
         ids = [self._tokenizer.convert_tokens_to_ids(self._tokenizer.tokenize(w)) for w in path]
