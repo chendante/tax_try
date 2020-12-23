@@ -36,7 +36,7 @@ def read_wiki_file(file_path):
 def read_voc(file_path):
     with codecs.open(file_path, 'r', encoding='utf-8') as fp:
         lines = fp.readlines()
-    return [line.strip() for line in lines]
+    return list(set([line.strip() for line in lines]))
 
 
 def desc_filter(word: str, full_desc: str):
@@ -73,7 +73,7 @@ def main():
     error_file = 0
     for doc_dir in doc_dirs:
         file_paths.extend(get_all_path(doc_dir))
-    for file_path in tqdm(file_paths, total=len(file_paths), desc="正在逐个处理文件, error_file: %d" % error_file):
+    for file_path in tqdm(file_paths, total=len(file_paths), desc="正在逐个处理文件"):
         try:
             xml_data = read_wiki_file(file_path)
         except:
@@ -84,11 +84,12 @@ def main():
         if len(docs) == 0:
             print(file_path)
         for doc in docs:
-            title = doc.getAttribute("title")
-            if title.lower() in voc:
+            title = doc.getAttribute("title").lower()
+            if title in voc or title.replace('-', ' ') in voc:
                 word2des[title.lower()] = desc_filter(title.lower(), doc.childNodes[0].nodeValue)
     warning_words = [w for w in voc if w not in word2des]
     print("WARNING These Words Not Found:", warning_words)
+    print("ERROR Files: ", error_file)
     with codecs.open(args.out_path, 'w+', encoding='utf-8') as fp:
         json.dump(word2des, fp)
 
