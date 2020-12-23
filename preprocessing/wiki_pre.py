@@ -70,12 +70,14 @@ def main():
     voc = read_voc(args.voc_path)
     file_paths = []
     word2des = {}
+    error_file = 0
     for doc_dir in doc_dirs:
         file_paths.extend(get_all_path(doc_dir))
-    for file_path in tqdm(file_paths, total=len(file_paths), desc="正在逐个处理文件"):
+    for file_path in tqdm(file_paths, total=len(file_paths), desc="正在逐个处理文件, error_file: %d" % error_file):
         try:
             xml_data = read_wiki_file(file_path)
         except:
+            error_file += 1
             continue
         xml_data = xml_data.documentElement
         docs = xml_data.getElementsByTagName('doc')
