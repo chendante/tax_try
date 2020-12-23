@@ -86,7 +86,9 @@ def main():
         for doc in docs:
             title = doc.getAttribute("title").lower()
             if title in voc or title.replace('-', ' ') in voc:
-                word2des[title.lower()] = desc_filter(title.lower(), doc.childNodes[0].nodeValue)
+                desc = desc_filter(title, doc.childNodes[0].nodeValue)
+                if desc != "":
+                    word2des[title.lower()] = desc
     warning_words = [w for w in voc if w not in word2des]
     print("WARNING These Words Not Found:", warning_words)
     print("ERROR Files: ", error_file)
