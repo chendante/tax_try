@@ -28,7 +28,7 @@ def get_all_path(wiki_dir):
 def read_wiki_file(file_path):
     with codecs.open(file_path, 'r', encoding='utf-8') as fp:
         content = fp.read()
-        content = "<list>" + content + "</list>"
+        content = "<list>\n" + content + "</list>"
     x = parseString(content)
     return x
 
@@ -73,7 +73,10 @@ def main():
     for doc_dir in doc_dirs:
         file_paths.extend(get_all_path(doc_dir))
     for file_path in tqdm(file_paths, total=len(file_paths), desc="正在逐个处理文件"):
-        xml_data = read_wiki_file(file_path)
+        try:
+            xml_data = read_wiki_file(file_path)
+        except:
+            continue
         xml_data = xml_data.documentElement
         docs = xml_data.getElementsByTagName('doc')
         if len(docs) == 0:
