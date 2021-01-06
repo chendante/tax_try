@@ -20,7 +20,6 @@ class ABert(BertPreTrainedModel):
             position_ids=None,
             head_mask=None,
             inputs_embeds=None,
-            labels=None,
             output_attentions=None,
             output_hidden_states=None,
             path_attention_mask=None

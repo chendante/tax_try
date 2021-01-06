@@ -11,7 +11,8 @@ def convert_taxo2voc(taxo_path, out_path):
     with codecs.open(taxo_path, encoding='utf-8') as f:
         taxo_lines = f.readlines()
     taxo_pairs = [[w for w in line.strip().split("\t")[1:]] for line in taxo_lines]
-    voc_list = [w for pair in taxo_pairs for w in pair]
+    voc_list = set([w for pair in taxo_pairs for w in pair])
+    print(len(voc_list))
     with codecs.open(out_path, 'w+', encoding='utf-8') as f:
         for voc in voc_list:
             f.write(voc + "\n")

@@ -1,4 +1,5 @@
-from transformers import BertModel, BertPreTrainedModel, BertConfig
+from transformers import BertModel, BertPreTrainedModel, BertConfig, BertForTokenClassification
+from transformers.modeling_bert import BertPooler
 from torch import nn
 import torch
 
@@ -10,6 +11,7 @@ class PBert(BertPreTrainedModel):
         super().__init__(config)
         self.bert = BertModel(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.pooler = BertPooler(config)
         self.classifier = nn.Linear(config.hidden_size, 1)
         self.loss_fct = nn.BCEWithLogitsLoss()
 
@@ -39,6 +41,7 @@ class PBert(BertPreTrainedModel):
         sequence_output = outputs[0]
         sequence_output = self.dropout(sequence_output)
         output = torch.bmm(pool_matrix.unsqueeze(1), sequence_output)
+        output = self.pooler(output)
         output = self.classifier(output.squeeze())
         if labels is not None:
             return self.loss_fct(output, labels)
