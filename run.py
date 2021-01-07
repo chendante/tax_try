@@ -12,6 +12,7 @@ def _train():
     args.lr = 5e-5
     args.eps = 1e-8
     args.pretrained_path = "bert-base-uncased"
+    args.dic_path = "./data/preprocessed/science_dic.json"
     trainer = model.SupervisedTrainer(args)
     trainer.train()
 

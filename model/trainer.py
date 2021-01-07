@@ -9,7 +9,7 @@ class SupervisedTrainer(object):
     def __init__(self, args):
         # super(BaseTrainer, self).__init__(args)
         self.args = args
-        self.model = model.PBert.from_pretrained(args.pretrained_path,
+        self.model = model.DBert.from_pretrained(args.pretrained_path,
                                                  gradient_checkpointing=True,
                                                  output_attentions=False,  # 模型是否返回 attentions weights.
                                                  output_hidden_states=False,  # 模型是否返回所有隐层状态.
@@ -17,6 +17,7 @@ class SupervisedTrainer(object):
         self.input_reader = model.InputReader(args.taxo_path)
         self.sampler = model.Sampler(self.input_reader.taxo_pairs,
                                      tokenizer=transformers.BertTokenizer.from_pretrained(args.pretrained_path),
+                                     dic_path=args.dic_path,
                                      padding_max=64)
 
     def train(self):
@@ -34,12 +35,11 @@ class SupervisedTrainer(object):
             self.model.train()
             self.sampler.sample_paths()  # 重新sample negative path
             loss_all = 0.0
-
             for batch in tqdm(data_loader, desc='Train epoch %s' % epoch, total=len(data_loader)):
                 optimizer.zero_grad()
-                pos_output = self.model(input_ids=batch["pos_ids"].cuda(), pool_matrix=batch["pos_pool_matrix"].cuda(),
+                pos_output = self.model(input_ids=batch["pos_ids"].cuda(), token_type_ids=batch["pos_type_ids"].cuda(),
                                         attention_mask=batch["pos_attn_masks"].cuda())
-                neg_output = self.model(input_ids=batch["neg_ids"].cuda(), pool_matrix=batch["neg_pool_matrix"].cuda(),
+                neg_output = self.model(input_ids=batch["neg_ids"].cuda(), token_type_ids=batch["neg_type_ids"].cuda(),
                                         attention_mask=batch["neg_attn_masks"].cuda())
                 loss = self.model.margin_loss_fct(pos_output, neg_output, batch["margin"].cuda())
                 loss.backward()
@@ -56,7 +56,7 @@ class SupervisedTrainer(object):
             mrr = 0
             for node, data in testing_data.items():
                 with torch.no_grad():
-                    output = self.model(input_ids=data["ids"].cuda(), pool_matrix=data["pool_matrix"].cuda(),
+                    output = self.model(input_ids=data["ids"].cuda(), token_type_ids=data["token_type_ids"].cuda(),
                                         attention_mask=data["attn_masks"].cuda())
                 index = output.squeeze().argmax().cpu()
                 _, indices = output.squeeze().sort(descending=True)
