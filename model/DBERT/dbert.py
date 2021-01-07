@@ -1,4 +1,4 @@
-from transformers import BertModel, BertPreTrainedModel, BertConfig, BertForTokenClassification
+from transformers import BertModel, BertPreTrainedModel, BertConfig, BertForTokenClassification, BertTokenizer
 from torch import nn
 import torch
 
