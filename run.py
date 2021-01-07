@@ -13,6 +13,7 @@ def _train():
     args.eps = 1e-8
     args.pretrained_path = "bert-base-uncased"
     args.dic_path = "./data/preprocessed/science_dic.json"
+    args.padding_max = 256
     trainer = model.SupervisedTrainer(args)
     trainer.train()
 

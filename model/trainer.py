@@ -18,7 +18,7 @@ class SupervisedTrainer(object):
         self.sampler = model.Sampler(self.input_reader.taxo_pairs,
                                      tokenizer=transformers.BertTokenizer.from_pretrained(args.pretrained_path),
                                      dic_path=args.dic_path,
-                                     padding_max=64)
+                                     padding_max=args.padding_max)
 
     def train(self):
         optimizer = transformers.AdamW(self.model.parameters(),
@@ -54,6 +54,7 @@ class SupervisedTrainer(object):
             testing_data = self.sampler.get_eval_data()
             count = 0
             mrr = 0
+            wu_p = 0
             for node, data in testing_data.items():
                 with torch.no_grad():
                     output = self.model(input_ids=data["ids"].cuda(), token_type_ids=data["token_type_ids"].cuda(),
@@ -64,5 +65,7 @@ class SupervisedTrainer(object):
                 if index == data["label"]:
                     count += 1
                 mrr += 1.0 / (float(rank) + 1.0)
+                wu_p += self.sampler.get_wu_p(index.item(), data["label"])
             print("acc:", count / float(len(testing_data)))
             print("mrr:", mrr / float(len(testing_data)))
+            print("wu_p: ", wu_p / float(len(testing_data)))

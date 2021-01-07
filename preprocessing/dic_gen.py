@@ -28,14 +28,13 @@ def search_meanings(word: str):
 
 
 if __name__ == '__main__':
-    path = "../data/raw_data/TExEval-2_testdata_1.2/gs_terms/EN/science_wordnet_en.terms"
+    path = "../data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/science_wordnet_en.taxo"
     out_path = "../data/preprocessed/science_dic.json"
     with codecs.open(path, 'r', 'utf-8') as fp:
         lines = fp.readlines()
-    words = [line.strip().split("\t")[1] for line in lines]
+    words = list(set([w for line in lines for w in line.strip().split("\t")[1:]]))
     dic = PyDictionary()
-    print(dic.meaning("science"))
-    m_dic = {"science": dic.meaning("science")}
+    m_dic = {}
     for w in tqdm(words, total=len(words)):
         meanings = search_meanings(w)
         if not meanings:
