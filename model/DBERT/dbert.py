@@ -1,5 +1,4 @@
 from transformers import BertModel, BertPreTrainedModel, BertConfig, BertForTokenClassification
-from transformers.modeling_bert import BertPooler
 from torch import nn
 import torch
 
@@ -11,7 +10,6 @@ class DBert(BertPreTrainedModel):
         super().__init__(config)
         self.bert = BertModel(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        self.pooler = BertPooler(config)
         self.classifier = nn.Linear(config.hidden_size, 1)
         self.loss_fct = nn.BCEWithLogitsLoss()
         self.init_weights()
