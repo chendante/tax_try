@@ -82,7 +82,7 @@ class TaxStruct(nx.DiGraph):
         node2full_path = {}
         for node in self.nodes:
             paths = nx.all_simple_paths(self, source=self.root, target=node)
-            all_nodes = set([node for path in paths for node in path])
+            all_nodes = set([node for path in paths for node in path[1:]])
             node2full_path[node] = all_nodes
         return node2full_path
 
@@ -211,7 +211,7 @@ class Sampler(Dataset):
     def encode_path(self, path):
         des_sent = self._word2des[path[0]][0]
         def_sent = " ".join(path)
-        encode = self._tokenizer.encode_plus(des_sent, def_sent, add_special_tokens=True, pad_to_max_length=True,
+        encode = self._tokenizer.encode_plus(des_sent, def_sent, add_special_tokens=True, padding='max_length',
                                              max_length=self._padding_max,
                                              # return_tensors='pt'
                                              )
