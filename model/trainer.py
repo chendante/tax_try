@@ -48,7 +48,7 @@ class SupervisedTrainer(object):
                 scheduler.step()
                 loss_all += loss.item()
             print(epoch, loss_all)
-            if epoch < 2:
+            if epoch < 3 or loss_all > 30:
                 continue
             self.model.eval()
             testing_data = self.sampler.get_eval_data()
