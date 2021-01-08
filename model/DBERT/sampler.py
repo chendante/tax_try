@@ -211,10 +211,13 @@ class Sampler(Dataset):
     def encode_path(self, path):
         des_sent = self._word2des[path[0]][0]
         def_sent = " ".join(path)
-        encode = self._tokenizer.encode_plus(des_sent, def_sent, add_special_tokens=True, padding='max_length',
-                                             max_length=self._padding_max,
+        encode = self._tokenizer.encode_plus(des_sent, def_sent, add_special_tokens=True,
                                              # return_tensors='pt'
                                              )
-        assert len(encode["input_ids"]) == self._padding_max
+        input_len = len(encode["input_ids"])
+        assert input_len < self._padding_max
+        encode["input_ids"] = encode["input_ids"] + [self._tokenizer.pad_token_id] * (self._padding_max - input_len)
+        encode["token_type_ids"] = encode["token_type_ids"] + [0] * (self._padding_max - input_len)
+        encode["attention_mask"] = encode["attention_mask"] + [0] * (self._padding_max - input_len)
         return torch.LongTensor(encode["input_ids"]), torch.LongTensor(encode["token_type_ids"]), torch.LongTensor(
             encode["attention_mask"])
