@@ -78,8 +78,9 @@ def filter_dic():
     for w in words:
         if w not in new_dic:
             new_dic[w] = w
-    with codecs.open(filter_path, "w+") as fp:
-        json.dump(new_dic, fp)
+            print(w)
+    # with codecs.open(filter_path, "w+") as fp:
+    #     json.dump(new_dic, fp)
 
 
 if __name__ == '__main__':
