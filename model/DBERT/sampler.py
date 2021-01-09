@@ -166,7 +166,7 @@ class Sampler(Dataset):
                 lca_dep = len(self.node2path[node])
         dep_a = len(self.node2path[node_a])
         dep_b = len(self.node2path[node_b])
-        res = 2.0 * float(lca_dep) / float(dep_a + dep_b)
+        res = 2.0 * float(lca_dep - 1) / float(dep_a + dep_b - 2)
         assert res <= 1
         return res
 
@@ -215,7 +215,7 @@ class Sampler(Dataset):
                                              # return_tensors='pt'
                                              )
         input_len = len(encode["input_ids"])
-        assert input_len < self._padding_max
+        assert input_len <= self._padding_max
         encode["input_ids"] = encode["input_ids"] + [self._tokenizer.pad_token_id] * (self._padding_max - input_len)
         encode["token_type_ids"] = encode["token_type_ids"] + [0] * (self._padding_max - input_len)
         encode["attention_mask"] = encode["attention_mask"] + [0] * (self._padding_max - input_len)

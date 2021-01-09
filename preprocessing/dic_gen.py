@@ -70,4 +70,5 @@ if __name__ == '__main__':
     path = "../data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/science_wordnet_en.taxo"
     out_path = "../data/preprocessed/science_dic.json"
     # main()
-    check_app()
+    # check_app()
+    print(PyDictionary.synonym("science"))

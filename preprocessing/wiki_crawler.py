@@ -2,6 +2,7 @@ from selenium import webdriver
 import codecs
 from tqdm import tqdm
 import json
+import re
 
 
 def catch_des(word):
@@ -74,18 +75,27 @@ def filter_dic():
             if w.lower() in sent:
                 res = sent
                 break
-        new_dic[w] = res
+        new_dic[w] = wash_line(res)
+    with codecs.open(wordnet_path, "r") as fp:
+        wordnet_dic = json.load(fp)
     for w in words:
         if w not in new_dic:
-            new_dic[w] = w
+            new_dic[w] = wordnet_dic[w]
             print(w)
-    # with codecs.open(filter_path, "w+") as fp:
-    #     json.dump(new_dic, fp)
+    with codecs.open(filter_path, "w+") as fp:
+        json.dump(new_dic, fp)
+
+
+def wash_line(line):
+    line = re.sub("\[[0-9]*]", "", line)
+    line = re.sub("\(.*\)", "", line)
+    return [line]
 
 
 if __name__ == '__main__':
     path = "../data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/science_wordnet_en.taxo"
     out_path = "../data/preprocessed/sci_wiki_dic.json"
+    wordnet_path = "../data/preprocessed/science_dic.json"
     filter_path = "../data/preprocessed/f_sci_wiki_dic.json"
     # driver = webdriver.Chrome()
     # main()
