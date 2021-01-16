@@ -6,6 +6,7 @@ import networkx as nx
 import random
 import transformers
 import json
+from torch.utils.data.dataset import TensorDataset
 
 
 class TaxStruct(nx.DiGraph):

@@ -22,7 +22,7 @@ def catch_des(word):
     return ""
 
 
-def search_meanings(word):
+def search_meaning(word):
     terms = word.split(" ")
     try_list = [word]
     if len(terms) > 1:
@@ -34,14 +34,56 @@ def search_meanings(word):
     return ""
 
 
+def get_word_left_info(word):
+    if word in forbidden_list:
+        return "", ""
+    info = search_meaning(word)
+    if info != "":
+        return word, info
+    terms = word.split(" ")
+    if len(terms) > 1:
+        return get_word_left_info(" ".join(terms[:-1]))
+    return "", ""
+
+
+def get_word_right_info(word):
+    if word in forbidden_list:
+        return "", ""
+    info = search_meaning(word)
+    if info != "":
+        return word, info
+    terms = word.split(" ")
+    if len(terms) > 1:
+        return get_word_left_info(" ".join(terms[1:]))
+    return "", ""
+
+
+def get_word_info(word: str):
+    res = {}
+    need_search = word
+    while need_search != "":
+        left_word, info = get_word_left_info(need_search)
+        if left_word != "":
+            res[word] = info
+            need_search = need_search.replace(left_word + " ", "").replace(left_word, "")
+        else:
+            need_search = " ".join(need_search.split(" ")[1:])
+    return res
+
+
 def main():
+    """
+    为taxo中的词，从wikipedia上寻找对应页面，抽取出第一段话。
+    """
     with codecs.open(path, 'r', 'utf-8') as fp:
         lines = fp.readlines()
     words = list(set([w for line in lines for w in line.strip().split("\t")[1:]]))
-    m_dic = {}
+    m_dic = getted_dic
+    words = [w for w in words if w not in getted_dic]
+    print(len(words), words)
     for w in tqdm(words, total=len(words)):
-        meaning = search_meanings(w)
-        if meaning == "":
+        meaning = get_word_info(w)
+        if meaning == {}:
             print(w)
             continue
         m_dic[w] = meaning
@@ -93,11 +135,16 @@ def wash_line(line):
 
 
 if __name__ == '__main__':
-    path = "../data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/science_wordnet_en.taxo"
-    out_path = "../data/preprocessed/sci_wiki_dic.json"
-    wordnet_path = "../data/preprocessed/science_dic.json"
-    filter_path = "../data/preprocessed/f_sci_wiki_dic.json"
-    # driver = webdriver.Chrome()
-    # main()
+    forbidden_list = ["a", "the", "is", "'s", "not", "don't", "and"]
+    path = "../data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/food_wordnet_en.taxo"
+    getted_dic = {}
+    with codecs.open("../data/preprocessed/food/wiki_dic.json", "r") as fp:
+        getted_dic = json.load(fp)
+    # getted_dic["marchand de vin"] = "Sauce marchand de vin \"wine-merchant's sauce\" is a similar designation."
+    out_path = "../data/preprocessed/food/wiki_full_dic.json"
+    # wordnet_path = "../data/preprocessed/science_dic.json"
+    filter_path = "../data/preprocessed/food/f_wiki_dic.json"
+    driver = webdriver.Chrome()
+    main()
     # catch_des("geography")
-    filter_dic()
+    # filter_dic()
