@@ -58,9 +58,10 @@ class SupervisedTrainer(object):
             wu_p = 0
             for node, data in testing_data.items():
                 outputs = []
-                for i in range((data["ids"].size(0) - 1) / eval_max + 1):
+                data_l = int(data["ids"].size(0))
+                for i in range(int((data_l - 1) / eval_max + 1)):
                     begin = i * eval_max
-                    end = min((i + 1) * eval_max, data["ids"].size(0))
+                    end = min((i + 1) * eval_max, data_l)
                     with torch.no_grad():
                         output = self.model(input_ids=data["ids"][begin:end, ...].cuda(),
                                             token_type_ids=data["token_type_ids"][begin:end, ...].cuda(),
