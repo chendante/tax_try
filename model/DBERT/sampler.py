@@ -122,6 +122,7 @@ class Sampler(Dataset):
             self.node2path[p[0]] = p
             self.index2node.append(p[0])
         self.sample_paths()
+        self._eval_path_group = None
 
     def sample_paths(self):
         self._margins = []
@@ -173,6 +174,8 @@ class Sampler(Dataset):
         return min(res, 1.0)
 
     def get_eval_data(self):
+        if self._eval_path_group is not None:
+            return self._eval_path_group
         path_group = dict()
         for node, predecessors in zip(self.testing_nodes, self.testing_predecessors):
             label = -1
@@ -191,6 +194,7 @@ class Sampler(Dataset):
             path_group[node] = dict(ids=torch.stack(ids_list, dim=0),
                                     token_type_ids=torch.stack(token_type_ids_list, dim=0),
                                     attn_masks=torch.stack(attn_masks, dim=0), label=label)
+        self._eval_path_group = path_group
         return path_group
 
     def __len__(self):
