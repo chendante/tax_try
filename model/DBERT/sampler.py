@@ -88,7 +88,8 @@ class TaxStruct(nx.DiGraph):
 
 
 class Sampler(Dataset):
-    def __init__(self, edges, tokenizer: transformers.BertTokenizer, dic_path, padding_max=256):
+    def __init__(self, edges, tokenizer: transformers.BertTokenizer, dic_path, padding_max=256, margin_beta=0.05,
+                 r_seed=0):
         """
         :param edges: (hyper, hypo)
         :param tokenizer:
@@ -100,12 +101,13 @@ class Sampler(Dataset):
 
         self._padding_max = padding_max
         self._tokenizer = tokenizer
+        self._margin_beta = margin_beta
         with open(dic_path, 'r', encoding='utf-8') as fp:
             self._word2des = json.load(fp)  # word: ["des0",]
         # tax graph init
         self._tax_graph = TaxStruct(edges)
         leaf_nodes = self._tax_graph.all_leaf_nodes()
-        self._seed = 0
+        self._seed = r_seed
         random.seed(self._seed)
         self.testing_nodes = random.sample(leaf_nodes, int(len(leaf_nodes) * 0.2))
         self.testing_predecessors = [list(self._tax_graph.predecessors(node)) for node in self.testing_nodes]
@@ -212,7 +214,7 @@ class Sampler(Dataset):
                     neg_type_ids=neg_type_ids,
                     pos_attn_masks=pos_attn_masks,
                     neg_attn_masks=neg_attn_masks,
-                    margin=torch.FloatTensor([margin * 0.1]))
+                    margin=torch.FloatTensor([margin * self._margin_beta]))
 
     def encode_path(self, path):
         des_sent = self._word2des[path[0]][0]

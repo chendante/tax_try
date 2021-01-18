@@ -13,7 +13,9 @@ class SupervisedTrainer(object):
         self.sampler = model.Sampler(self.input_reader.taxo_pairs,
                                      tokenizer=transformers.BertTokenizer.from_pretrained(args.pretrained_path),
                                      dic_path=args.dic_path,
-                                     padding_max=args.padding_max)
+                                     padding_max=args.padding_max,
+                                     margin_beta=args.margin_beta,
+                                     r_seed=args.r_seed)
         self.model = model.DBert.from_pretrained(args.pretrained_path,
                                                  gradient_checkpointing=True,
                                                  output_attentions=False,  # 模型是否返回 attentions weights.
@@ -61,7 +63,7 @@ class SupervisedTrainer(object):
                     soft_optimizer.step()
                 loss_all += loss.item()
             print(epoch, loss_all)
-            if epoch < 25 or epoch % 5 != 0:
+            if epoch < 11 or (epoch + 1) % 5 != 0:
                 continue
             self.model.eval()
             testing_data = self.sampler.get_eval_data()

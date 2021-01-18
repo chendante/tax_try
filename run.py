@@ -13,7 +13,9 @@ def _train():
                 dic_path="./data/preprocessed/food/f_wiki_dic.json",
                 padding_max=256,
                 pretrained_path="bert-base-uncased",
-                soft_epochs=2)
+                soft_epochs=0,
+                margin_beta=0.05,
+                r_seed=0)
     args = util.DotDict(args)
     trainer = model.SupervisedTrainer(args)
     trainer.train()

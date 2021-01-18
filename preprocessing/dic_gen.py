@@ -80,7 +80,7 @@ def append_words(words):
 
 if __name__ == '__main__':
     path = "../data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/food_wordnet_en.taxo"
-    out_path = "../data/preprocessed/food/wordnet_food_dic.json"
+    out_path = "../data/preprocessed/environment/wordnet_dic.json"
     # main()
     app_words = ["cock-a-leekie", "pork-and-veal goulash", "coquilles saint-jacques", "pot-au-feu",
                  "bacon-lettuce-tomato sandwich", "half-and-half dressing", "half-and-half"]

@@ -35,7 +35,7 @@ def search_meaning(word):
 
 
 def get_word_left_info(word):
-    if word in forbidden_list:
+    if word in forbidden_list or len(word) < 3:
         return "", ""
     info = search_meaning(word)
     if info != "":
@@ -47,7 +47,7 @@ def get_word_left_info(word):
 
 
 def get_word_right_info(word):
-    if word in forbidden_list:
+    if word in forbidden_list or len(word) < 3:
         return "", ""
     info = search_meaning(word)
     if info != "":
@@ -80,7 +80,6 @@ def main():
     words = list(set([w for line in lines for w in line.strip().split("\t")[1:]]))
     m_dic = getted_dic
     words = [w for w in words if w not in getted_dic]
-    print(len(words), words)
     for w in tqdm(words, total=len(words)):
         meaning = get_word_info(w)
         if meaning == {}:
@@ -116,14 +115,16 @@ def filter_dic():
         else:
             res = []
             for in_w, in_des in des.items():
+                if in_w in forbidden_list:
+                    continue
                 res.append(deal_line(in_des, in_w))
             new_dic[w] = [" ".join(res)]
-    with codecs.open(wordnet_path, "r") as fp:
-        wordnet_dic = json.load(fp)
-    for w in words:
-        if w not in new_dic:
-            new_dic[w] = wordnet_dic[w]
-            print(w)
+    # with codecs.open(wordnet_path, "r") as fp:
+    #     wordnet_dic = json.load(fp)
+    # for w in words:
+    #     if w not in new_dic:
+    #         new_dic[w] = wordnet_dic[w]
+    #         print(w)
     with codecs.open(filter_path, "w+") as fp:
         json.dump(new_dic, fp)
 
@@ -145,15 +146,15 @@ def wash_line(line):
 
 
 if __name__ == '__main__':
-    forbidden_list = ["a", "the", "is", "'s", "not", "don't", "and"]
-    path = "../data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/food_wordnet_en.taxo"
+    forbidden_list = ["a", "the", "is", "'s", "not", "don't", "and", "of", "from", "for", "with", "on"]
+    path = "../data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/environment_eurovoc_en.taxo"
     getted_dic = {}
-    with codecs.open("../data/preprocessed/food/wiki_dic.json", "r") as fp:
-        getted_dic = json.load(fp)
+    # with codecs.open("../data/preprocessed/food/wiki_dic.json", "r") as fp:
+    #     getted_dic = json.load(fp)
     # getted_dic["marchand de vin"] = "Sauce marchand de vin \"wine-merchant's sauce\" is a similar designation."
-    out_path = "../data/preprocessed/food/wiki_full_dic.json"
-    wordnet_path = "../data/preprocessed/food/wordnet_food_dic.json"
-    filter_path = "../data/preprocessed/food/f_wiki_dic.json"
+    out_path = "../data/preprocessed/environment/wiki_full_dic.json"
+    wordnet_path = "../data/preprocessed/environment/wordnet_dic.json"
+    filter_path = "../data/preprocessed/environment/f_wiki_dic.json"
     # driver = webdriver.Chrome()
     # main()
     # catch_des("geography")
