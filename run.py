@@ -6,11 +6,11 @@ import util
 
 
 def _train():
-    args = dict(taxo_path="./data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/science_wordnet_en.taxo",
-                epochs=30,
+    args = dict(taxo_path="./data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/food_wordnet_en.taxo",
+                epochs=50,
                 lr=3e-5,
                 eps=1e-8,
-                dic_path="./data/preprocessed/f_sci_wiki_dic.json",
+                dic_path="./data/preprocessed/food/f_wiki_dic.json",
                 padding_max=256,
                 pretrained_path="bert-base-uncased")
     args = util.DotDict(args)

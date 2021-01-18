@@ -9,16 +9,17 @@ class SupervisedTrainer(object):
     def __init__(self, args):
         # super(BaseTrainer, self).__init__(args)
         self.args = args
+        self.input_reader = model.InputReader(args.taxo_path)
+        self.sampler = model.Sampler(self.input_reader.taxo_pairs,
+                                 tokenizer=transformers.BertTokenizer.from_pretrained(args.pretrained_path),
+                                 dic_path=args.dic_path,
+                                 padding_max=args.padding_max)
         self.model = model.DBert.from_pretrained(args.pretrained_path,
                                                  gradient_checkpointing=True,
                                                  output_attentions=False,  # 模型是否返回 attentions weights.
                                                  output_hidden_states=False,  # 模型是否返回所有隐层状态.
                                                  )
-        self.input_reader = model.InputReader(args.taxo_path)
-        self.sampler = model.Sampler(self.input_reader.taxo_pairs,
-                                     tokenizer=transformers.BertTokenizer.from_pretrained(args.pretrained_path),
-                                     dic_path=args.dic_path,
-                                     padding_max=args.padding_max)
+
 
     def train(self):
         optimizer = transformers.AdamW(self.model.parameters(),
@@ -48,7 +49,7 @@ class SupervisedTrainer(object):
                 scheduler.step()
                 loss_all += loss.item()
             print(epoch, loss_all)
-            if epoch < 25 or loss_all > 40:
+            if epoch < 25 or epoch % 5 != 0:
                 continue
             self.model.eval()
             testing_data = self.sampler.get_eval_data()

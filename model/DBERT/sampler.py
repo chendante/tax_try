@@ -155,6 +155,8 @@ class Sampler(Dataset):
         return pos_path[0:1] + neg_path, self._tax_graph.get_margin(pos_path[1:], neg_path)
 
     def get_wu_p(self, index_a, index_b):
+        if index_a == index_b:
+            return 1.0
         node_a = self.index2node[index_a]
         node_b = self.index2node[index_b]
         full_path_a = self.node2full_path[node_a]
@@ -167,8 +169,8 @@ class Sampler(Dataset):
         dep_a = len(self.node2path[node_a])
         dep_b = len(self.node2path[node_b])
         res = 2.0 * float(lca_dep) / float(dep_a + dep_b)
-        assert res <= 1
-        return res
+        # assert res <= 1
+        return min(res, 1.0)
 
     def get_eval_data(self):
         path_group = dict()

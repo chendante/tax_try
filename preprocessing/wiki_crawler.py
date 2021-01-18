@@ -111,13 +111,13 @@ def filter_dic():
         dic = json.load(fp)
     new_dic = {}
     for w, des in dic.items():
-        sents = des.lower().split(".")
-        res = sents[0]
-        for sent in sents:
-            if w.lower() in sent:
-                res = sent
-                break
-        new_dic[w] = wash_line(res)
+        if type(des) == str:
+            new_dic[w] = [deal_line(des, w)]
+        else:
+            res = []
+            for in_w, in_des in des.items():
+                res.append(deal_line(in_des, in_w))
+            new_dic[w] = [" ".join(res)]
     with codecs.open(wordnet_path, "r") as fp:
         wordnet_dic = json.load(fp)
     for w in words:
@@ -128,10 +128,20 @@ def filter_dic():
         json.dump(new_dic, fp)
 
 
+def deal_line(line, w):
+    sents = line.lower().split(".")
+    res = sents[0]
+    for sent in sents:
+        if w.lower() in sent:
+            res = sent
+            break
+    return wash_line(res)
+
+
 def wash_line(line):
     line = re.sub("\[[0-9]*]", "", line)
     line = re.sub("\(.*\)", "", line)
-    return [line]
+    return line
 
 
 if __name__ == '__main__':
@@ -142,9 +152,9 @@ if __name__ == '__main__':
         getted_dic = json.load(fp)
     # getted_dic["marchand de vin"] = "Sauce marchand de vin \"wine-merchant's sauce\" is a similar designation."
     out_path = "../data/preprocessed/food/wiki_full_dic.json"
-    # wordnet_path = "../data/preprocessed/science_dic.json"
+    wordnet_path = "../data/preprocessed/food/wordnet_food_dic.json"
     filter_path = "../data/preprocessed/food/f_wiki_dic.json"
-    driver = webdriver.Chrome()
-    main()
+    # driver = webdriver.Chrome()
+    # main()
     # catch_des("geography")
-    # filter_dic()
+    filter_dic()

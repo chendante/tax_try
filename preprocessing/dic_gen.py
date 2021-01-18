@@ -20,6 +20,8 @@ def search_meanings(word: str):
     try_list = [word]
     if len(terms) > 1:
         try_list.append(word.replace(" ", "-", 1))
+    if len(terms) > 2:
+        try_list.append(word.replace(" ", "-"))
     for w in try_list:
         tag2meaning = PyDictionary.meaning(w.replace(" ", "+"), True)
         if tag2meaning is not None:
@@ -66,9 +68,22 @@ def check_app():
     print(pro_num, count)
 
 
+def append_words(words):
+    with codecs.open(out_path, "r") as fp:
+        origin_dic = json.load(fp)
+    for w in words:
+        meanings = search_meanings(w)
+        origin_dic[w] = meanings
+    with codecs.open(out_path, "w+") as fp:
+        json.dump(origin_dic, fp)
+
+
 if __name__ == '__main__':
-    path = "../data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/science_wordnet_en.taxo"
-    out_path = "../data/preprocessed/science_dic.json"
+    path = "../data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/food_wordnet_en.taxo"
+    out_path = "../data/preprocessed/food/wordnet_food_dic.json"
     # main()
+    app_words = ["cock-a-leekie", "pork-and-veal goulash", "coquilles saint-jacques", "pot-au-feu",
+                 "bacon-lettuce-tomato sandwich", "half-and-half dressing", "half-and-half"]
+    append_words(app_words)
     # check_app()
-    print(PyDictionary.synonym("science"))
+    # print(PyDictionary.synonym("science"))
