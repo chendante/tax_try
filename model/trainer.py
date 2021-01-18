@@ -62,8 +62,8 @@ class SupervisedTrainer(object):
                 else:
                     soft_optimizer.step()
                 loss_all += loss.item()
-            print(epoch, loss_all)
-            if epoch < 11 or (epoch + 1) % 5 != 0:
+            print(epoch, loss_all/len(data_loader))
+            if epoch < 21 or (epoch + 1) % 5 != 0:
                 continue
             self.model.eval()
             testing_data = self.sampler.get_eval_data()

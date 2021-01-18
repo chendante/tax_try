@@ -173,7 +173,7 @@ class Sampler(Dataset):
         dep_b = len(self.node2path[node_b])
         res = 2.0 * float(lca_dep) / float(dep_a + dep_b)
         # assert res <= 1
-        return min(res, 1.0)
+        return res
 
     def get_eval_data(self):
         if self._eval_path_group is not None:
