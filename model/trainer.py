@@ -66,7 +66,7 @@ class SupervisedTrainer(object):
                     soft_optimizer.step()
                 loss_all += loss.item()
             print(epoch, loss_all/len(data_loader))
-            if epoch >= self.args.epoch_be and loss_all/len(data_loader) < 0.8:
+            if epoch >= self.args.epoch_be and loss_all/len(data_loader) < self.args.break_loss:
                 break
         self.model.eval()
         testing_data = self.sampler.get_eval_data()
