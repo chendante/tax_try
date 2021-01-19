@@ -63,7 +63,7 @@ class SupervisedTrainer(object):
                     soft_optimizer.step()
                 loss_all += loss.item()
             print(epoch, loss_all/len(data_loader))
-            if epoch < 81 or (epoch + 1) % 10 != 0:
+            if self.args.epoch_be < 81 or (epoch + 1) % self.args.epoch_ave != 0:
                 continue
             self.model.eval()
             testing_data = self.sampler.get_eval_data()

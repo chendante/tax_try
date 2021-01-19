@@ -15,7 +15,9 @@ def _train():
                 pretrained_path="bert-base-uncased",
                 soft_epochs=0,
                 margin_beta=0.05,
-                r_seed=0)
+                r_seed=0,
+                epoch_be=20,
+                epoch_ave=5)
     args = util.DotDict(args)
     trainer = model.SupervisedTrainer(args)
     trainer.train()
