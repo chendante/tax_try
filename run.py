@@ -6,7 +6,7 @@ import util
 
 
 def _train():
-    args = dict(taxo_path="./data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/food_wordnet_en.taxo",
+    args = dict(taxo_path="./data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/environment_eurovoc_en.taxo",
                 epochs=50,
                 lr=3e-5,
                 eps=1e-8,
