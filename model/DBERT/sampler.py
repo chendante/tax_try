@@ -109,7 +109,7 @@ class Sampler(Dataset):
         leaf_nodes = self._tax_graph.all_leaf_nodes()
         self._seed = r_seed
         random.seed(self._seed)
-        self.testing_nodes = random.sample(leaf_nodes, int(len(leaf_nodes) * 0.1))
+        self.testing_nodes = random.sample(leaf_nodes, int(len(leaf_nodes) * 0.2))
         self.testing_predecessors = [list(self._tax_graph.predecessors(node)) for node in self.testing_nodes]
         self._tax_graph.remove_nodes_from(self.testing_nodes)
         # path: leaf -> root paths information init
