@@ -23,6 +23,9 @@ class SupervisedTrainer(object):
                                                  )
 
     def train(self):
+        f_acc = 0
+        f_mrr = 0
+        f_wu_p = 0
         soft_epochs = self.args.soft_epochs
         soft_optimizer = transformers.AdamW(self.model.parameters(),
                                             lr=self.args.lr,
@@ -63,33 +66,37 @@ class SupervisedTrainer(object):
                     soft_optimizer.step()
                 loss_all += loss.item()
             print(epoch, loss_all/len(data_loader))
-            if epoch < self.args.epoch_be or (epoch + 1) % self.args.epoch_ave != 0:
-                continue
-            self.model.eval()
-            testing_data = self.sampler.get_eval_data()
-            eval_max = 500  # 根据GPU能力进行设置
-            count = 0
-            mrr = 0
-            wu_p = 0
-            for node, data in testing_data.items():
-                outputs = []
-                data_l = int(data["ids"].size(0))
-                for i in range(int((data_l - 1) / eval_max + 1)):
-                    begin = i * eval_max
-                    end = min((i + 1) * eval_max, data_l)
-                    with torch.no_grad():
-                        output = self.model(input_ids=data["ids"][begin:end, ...].cuda(),
-                                            token_type_ids=data["token_type_ids"][begin:end, ...].cuda(),
-                                            attention_mask=data["attn_masks"][begin:end, ...].cuda())
-                    outputs.extend(output)
-                outputs = torch.stack(outputs, dim=0)
-                index = outputs.squeeze().argmax().cpu()
-                _, indices = outputs.squeeze().sort(descending=True)
-                rank = (indices == data["label"]).nonzero().squeeze()
-                if index == data["label"]:
-                    count += 1
-                mrr += 1.0 / (float(rank) + 1.0)
-                wu_p += self.sampler.get_wu_p(index.item(), data["label"])
-            print("acc:", count / float(len(testing_data)))
-            print("mrr:", mrr / float(len(testing_data)))
-            print("wu_p: ", wu_p / float(len(testing_data)))
+            if epoch >= self.args.epoch_be and loss_all/len(data_loader) < 0.8:
+                break
+        self.model.eval()
+        testing_data = self.sampler.get_eval_data()
+        eval_max = 500  # 根据GPU能力进行设置
+        count = 0
+        mrr = 0
+        wu_p = 0
+        for node, data in testing_data.items():
+            outputs = []
+            data_l = int(data["ids"].size(0))
+            for i in range(int((data_l - 1) / eval_max + 1)):
+                begin = i * eval_max
+                end = min((i + 1) * eval_max, data_l)
+                with torch.no_grad():
+                    output = self.model(input_ids=data["ids"][begin:end, ...].cuda(),
+                                        token_type_ids=data["token_type_ids"][begin:end, ...].cuda(),
+                                        attention_mask=data["attn_masks"][begin:end, ...].cuda())
+                outputs.extend(output)
+            outputs = torch.stack(outputs, dim=0)
+            index = outputs.squeeze().argmax().cpu()
+            _, indices = outputs.squeeze().sort(descending=True)
+            rank = (indices == data["label"]).nonzero().squeeze()
+            if index == data["label"]:
+                count += 1
+            mrr += 1.0 / (float(rank) + 1.0)
+            wu_p += self.sampler.get_wu_p(index.item(), data["label"])
+        f_acc = count / float(len(testing_data))
+        f_mrr = mrr / float(len(testing_data))
+        f_wu_p = wu_p / float(len(testing_data))
+        print("acc:", count / float(len(testing_data)))
+        print("mrr:", mrr / float(len(testing_data)))
+        print("wu_p: ", wu_p / float(len(testing_data)))
+        return f_acc, f_mrr, f_wu_p
