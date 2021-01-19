@@ -17,7 +17,8 @@ def _train():
                 margin_beta=0.05,
                 r_seed=0,
                 epoch_be=20,
-                epoch_ave=5)
+                epoch_ave=5,
+                break_loss=0.8)
     args = util.DotDict(args)
     trainer = model.SupervisedTrainer(args)
     trainer.train()
