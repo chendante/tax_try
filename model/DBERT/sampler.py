@@ -222,7 +222,6 @@ class Sampler(Dataset):
         encode = self._tokenizer.encode_plus(des_sent, def_sent, add_special_tokens=True,
                                              # return_tensors='pt'
                                              )
-        # encode["input_ids"][encode["input_ids"] == 1086] = 1
         input_len = len(encode["input_ids"])
         assert input_len <= self._padding_max
         encode["input_ids"] = encode["input_ids"] + [self._tokenizer.pad_token_id] * (self._padding_max - input_len)
