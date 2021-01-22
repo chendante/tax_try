@@ -218,7 +218,7 @@ class Sampler(Dataset):
 
     def encode_path(self, path):
         des_sent = self._word2des[path[0]][0]
-        def_sent = path[0]
+        def_sent = path[1]
         encode = self._tokenizer.encode_plus(des_sent, def_sent, add_special_tokens=True,
                                              # return_tensors='pt'
                                              )
