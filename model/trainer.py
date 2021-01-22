@@ -17,15 +17,12 @@ class SupervisedTrainer(object):
                                      margin_beta=args.margin_beta,
                                      r_seed=args.r_seed)
         self.model = model.DBert.from_pretrained(args.pretrained_path,
-                                                 gradient_checkpointing=True,
+                                                 # gradient_checkpointing=True,
                                                  output_attentions=False,  # 模型是否返回 attentions weights.
                                                  output_hidden_states=False,  # 模型是否返回所有隐层状态.
                                                  )
 
     def train(self):
-        f_acc = 0
-        f_mrr = 0
-        f_wu_p = 0
         soft_epochs = self.args.soft_epochs
         soft_optimizer = transformers.AdamW(self.model.parameters(),
                                             lr=self.args.lr,
@@ -57,6 +54,7 @@ class SupervisedTrainer(object):
                 loss = self.model.margin_loss_fct(pos_output, neg_output,
                                                   batch["margin"].cuda() if epoch >= soft_epochs else torch.zeros(
                                                       batch["margin"].size()).cuda())
+
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1)
                 if epoch >= soft_epochs:

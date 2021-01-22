@@ -145,17 +145,35 @@ def wash_line(line):
     return line
 
 
+def for_food():
+    with codecs.open("../data/preprocessed/food/wiki_dic.json") as fp:
+        wiki_dic = json.load(fp)
+    with codecs.open("../data/preprocessed/food/wordnet_dic.json") as fp:
+        wordnet_dic = json.load(fp)
+    with codecs.open("../data/preprocessed/food/f_wiki_dic.json") as fp:
+        f_dic = json.load(fp)
+    out_dic = {}
+    for w, des in f_dic.items():
+        if w in wiki_dic or w not in wordnet_dic:
+            out_dic[w] = des
+        else:
+            out_dic[w] = wordnet_dic[w]
+    with codecs.open("../data/preprocessed/food/ww_dic.json", mode="w+", encoding="utf-8") as fp:
+        json.dump(out_dic, fp)
+
+
 if __name__ == '__main__':
-    forbidden_list = ["a", "the", "is", "'s", "not", "don't", "and", "of", "from", "for", "with", "on"]
-    path = "../data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/environment_eurovoc_en.taxo"
-    getted_dic = {}
+    # forbidden_list = ["a", "the", "is", "'s", "not", "don't", "and", "of", "from", "for", "with", "on"]
+    # path = "../data/raw_data/TExEval-2_testdata_1.2/gs_taxo/EN/environment_eurovoc_en.taxo"
+    # getted_dic = {}
     # with codecs.open("../data/preprocessed/food/wiki_dic.json", "r") as fp:
     #     getted_dic = json.load(fp)
     # getted_dic["marchand de vin"] = "Sauce marchand de vin \"wine-merchant's sauce\" is a similar designation."
-    out_path = "../data/preprocessed/environment/wiki_full_dic.json"
-    wordnet_path = "../data/preprocessed/environment/wordnet_dic.json"
-    filter_path = "../data/preprocessed/environment/f_wiki_dic.json"
+    # out_path = "../data/preprocessed/environment/wiki_full_dic.json"
+    # wordnet_path = "../data/preprocessed/environment/wordnet_dic.json"
+    # filter_path = "../data/preprocessed/environment/f_wiki_dic.json"
     # driver = webdriver.Chrome()
     # main()
     # catch_des("geography")
-    filter_dic()
+    # filter_dic()
+    for_food()
