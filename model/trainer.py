@@ -66,12 +66,12 @@ class SupervisedTrainer(object):
             print(epoch, loss_all/len(data_loader))
             if epoch >= self.args.epoch_be and (loss_all/len(data_loader)) <= self.args.break_loss:
                 break
+            if epoch > 5 and (loss_all/len(data_loader)) > self.args.bad_loss:
+                return 0, 0, 0
         self.model.eval()
         testing_data = self.sampler.get_eval_data()
         eval_max = 500  # 根据GPU能力进行设置
-        count = 0
-        mrr = 0
-        wu_p = 0
+        count, mrr, wu_p = 0, 0, 0
         for node, data in testing_data.items():
             outputs = []
             data_l = int(data["ids"].size(0))

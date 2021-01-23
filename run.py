@@ -18,7 +18,8 @@ def _train():
                 r_seed=0,
                 epoch_be=20,
                 epoch_ave=5,
-                break_loss=0.8)
+                break_loss=0.8,
+                bad_loss=6)
     args = util.DotDict(args)
     trainer = model.SupervisedTrainer(args)
     trainer.train()
