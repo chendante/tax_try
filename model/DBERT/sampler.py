@@ -128,8 +128,8 @@ class Sampler(Dataset):
         for p in self.att_paths:
             self.node2path[p[0]] = p
             self.index2node.append(p[0])
-        self.sample_paths()
         self.gen_neg_pro()
+        self.sample_paths()
 
     def sample_paths(self):
         self._margins = []
@@ -167,7 +167,7 @@ class Sampler(Dataset):
         生成负采样概率
         """
         for path in self.leaf_paths:
-            margins = [self._tax_graph.get_margin(self.att_paths[n], path) for n in self._nodes]
+            margins = [self._tax_graph.get_margin(self.node2path[n], path) for n in self._nodes]
             pro = [1 / margin if margin != 0 else 0 for margin in margins]
             pro = 1 / sum(pro) * np.array(pro)
             self._node2pro[path[0]] = pro
