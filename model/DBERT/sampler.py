@@ -6,6 +6,7 @@ import networkx as nx
 import random
 import transformers
 import json
+import numpy as np
 
 
 class TaxStruct(nx.DiGraph):
@@ -98,6 +99,8 @@ class Sampler(Dataset):
         self._margins = []
         self._pos_paths = []
         self._neg_paths = []
+        self._eval_path_group = None
+        self._node2pro = dict()
 
         self._padding_max = padding_max
         self._tokenizer = tokenizer
@@ -112,11 +115,13 @@ class Sampler(Dataset):
         self.testing_nodes = random.sample(leaf_nodes, int(len(leaf_nodes) * 0.2))
         self.testing_predecessors = [list(self._tax_graph.predecessors(node)) for node in self.testing_nodes]
         self._tax_graph.remove_nodes_from(self.testing_nodes)
+
+        self._nodes = [n for n in self._tax_graph.nodes.keys() if n != self._tax_graph.root]
         # path: leaf -> root paths information init
         self.paths = [list(reversed(path[1:])) for path in self._tax_graph.all_paths(2)]
         self.leaf_paths = [list(reversed(path[1:])) for path in self._tax_graph.all_leaf_paths(2)]
         # 用于eval部分
-        self.att_paths = [list(reversed(path[1:])) for path in self._tax_graph.all_paths(1)]  # 不带 root
+        self.att_paths = [list(reversed(path[1:])) for path in self._tax_graph.all_paths(1)]  # 不带虚拟 root
         self.node2full_path = self._tax_graph.get_node2full_path()
         self.node2path = dict()  # 不带 root
         self.index2node = []
@@ -124,7 +129,7 @@ class Sampler(Dataset):
             self.node2path[p[0]] = p
             self.index2node.append(p[0])
         self.sample_paths()
-        self._eval_path_group = None
+        self.gen_neg_pro()
 
     def sample_paths(self):
         self._margins = []
@@ -141,7 +146,7 @@ class Sampler(Dataset):
         将path的第一个node修改
         """
         while True:
-            neg_node = random.choice(list(self._tax_graph.nodes.keys()))
+            neg_node = random.choice(self._nodes)
             if neg_node not in pos_path and neg_node != self._tax_graph.root:
                 break
         return [neg_node] + pos_path[1:], self._tax_graph.get_margin(pos_path[1:], self.node2path[neg_node][1:])
@@ -151,11 +156,21 @@ class Sampler(Dataset):
         保留path的第一个node，修改其后的path
         """
         while True:
-            neg_node = random.choice(list(self._tax_graph.nodes.keys()))
+            neg_node = np.random.choice(self._nodes, p=self._node2pro[pos_path[0]])
             if neg_node != pos_path[0] and neg_node != self._tax_graph.root:
                 break
         neg_path = self.node2path[neg_node]
         return pos_path[0:1] + neg_path, self._tax_graph.get_margin(pos_path[1:], neg_path)
+
+    def gen_neg_pro(self):
+        """
+        生成负采样概率
+        """
+        for path in self.leaf_paths:
+            margins = [self._tax_graph.get_margin(self.att_paths[n], path) for n in self._nodes]
+            pro = [1 / margin if margin != 0 else 0 for margin in margins]
+            pro = 1 / sum(pro) * np.array(pro)
+            self._node2pro[path[0]] = pro
 
     def get_wu_p(self, index_a, index_b):
         if index_a == index_b:
