@@ -47,13 +47,8 @@ class SupervisedTrainer(object):
                     optimizer.zero_grad()
                 else:
                     soft_optimizer.zero_grad()
-                pos_output = self.model(input_ids=batch["pos_ids"].cuda(), token_type_ids=batch["pos_type_ids"].cuda(),
-                                        attention_mask=batch["pos_attn_masks"].cuda())
-                neg_output = self.model(input_ids=batch["neg_ids"].cuda(), token_type_ids=batch["neg_type_ids"].cuda(),
-                                        attention_mask=batch["neg_attn_masks"].cuda())
-                loss = self.model.margin_loss_fct(pos_output, neg_output,
-                                                  batch["margin"].cuda() if epoch >= soft_epochs else torch.zeros(
-                                                      batch["margin"].size()).cuda())
+                loss = self.model(input_ids=batch["input_ids"].cuda(), attention_mask=batch["attention_mask"].cuda(),
+                                  token_type_ids=batch["type_ids"].cuda(), labels=batch["labels"])
 
                 loss.backward()
                 torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1)

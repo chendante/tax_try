@@ -89,15 +89,15 @@ class TaxStruct(nx.DiGraph):
 
 class Sampler(Dataset):
     def __init__(self, edges, tokenizer: transformers.BertTokenizer, dic_path, padding_max=256, margin_beta=0.05,
-                 r_seed=0):
+                 r_seed=0, neg_times=8):
         """
         :param edges: (hyper, hypo)
         :param tokenizer:
         :param padding_max:
         """
-        self._margins = []
-        self._pos_paths = []
-        self._neg_paths = []
+        self._neg_times = neg_times
+        self._training_paths = []
+        self._labels = []
 
         self._padding_max = padding_max
         self._tokenizer = tokenizer
@@ -127,14 +127,16 @@ class Sampler(Dataset):
         self._eval_path_group = None
 
     def sample_paths(self):
-        self._margins = []
-        self._pos_paths = []
-        self._neg_paths = []
+        self._training_paths = []
+        self._labels = []
+        self._seed += 1
         for path in self.leaf_paths:
-            self._pos_paths.append(path)
-            neg_path, margin = self.get_neg_path_in_path(path)
-            self._neg_paths.append(neg_path)
-            self._margins.append(margin)
+            self._training_paths.append(path)
+            self._labels.append(1)
+            neg_nodes = random.sample(self._tax_graph.all_leaf_nodes(), self._neg_times)
+            for neg_node in neg_nodes:
+                self._training_paths.append(path[0:1] + self.node2path[neg_node])
+                self._labels.append(0)
 
     def get_neg_path_in_node(self, pos_path):
         """
@@ -200,21 +202,16 @@ class Sampler(Dataset):
         return path_group
 
     def __len__(self):
-        return len(self._pos_paths)
+        return len(self._training_paths)
 
     def __getitem__(self, item):
-        pos_path = self._pos_paths[item]
-        neg_path = self._neg_paths[item]
-        margin = self._margins[item]
-        pos_ids, pos_type_ids, pos_attn_masks = self.encode_path(pos_path)
-        neg_ids, neg_type_ids, neg_attn_masks = self.encode_path(neg_path)
-        return dict(pos_ids=pos_ids,
-                    neg_ids=neg_ids,
-                    pos_type_ids=pos_type_ids,
-                    neg_type_ids=neg_type_ids,
-                    pos_attn_masks=pos_attn_masks,
-                    neg_attn_masks=neg_attn_masks,
-                    margin=torch.FloatTensor([margin * self._margin_beta]))
+        path = self._training_paths[item]
+        label = self._labels[item]
+        input_ids, type_ids, attn_masks = self.encode_path(path)
+        return dict(input_ids=input_ids,
+                    type_ids=type_ids,
+                    attn_masks=attn_masks,
+                    labels=torch.FloatTensor([label]))
 
     def encode_path(self, path):
         des_sent = self._word2des[path[0]][0]
