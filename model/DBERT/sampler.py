@@ -167,7 +167,7 @@ class Sampler(Dataset):
         生成负采样概率
         """
         for path in self.leaf_paths:
-            margins = [self._tax_graph.get_margin(self.node2path[n], path) for n in self._nodes]
+            margins = [self._tax_graph.get_margin(self.node2path[n], path[1:]) for n in self._nodes]
             pro = [1 / margin if margin != 0 else 0 for margin in margins]
             pro = 1 / sum(pro) * np.array(pro)
             self._node2pro[path[0]] = pro
