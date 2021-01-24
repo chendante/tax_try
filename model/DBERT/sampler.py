@@ -77,7 +77,7 @@ class TaxStruct(nx.DiGraph):
     @staticmethod
     def get_margin(path_a, path_b):
         com = len(set(path_a).intersection(set(path_b)))
-        return abs(len(path_a) - com) + abs(len(path_b) - com)
+        return (abs(len(path_a) - com) + abs(len(path_b) - com)) / com
 
     def get_node2full_path(self):
         node2full_path = {}
