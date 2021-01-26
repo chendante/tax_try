@@ -30,13 +30,14 @@ class DBert(BertPreTrainedModel):
         )
         sequence_output = outputs[0]
         logits = torch.bmm(pool_matrix.unsqueeze(1), sequence_output)
+        logits = self.classifier(logits)
         if labels is not None:
             return self.loss_fct(logits, labels)
         return logits
 
     @classmethod
     def margin_loss_fct(cls, pos_score: torch.Tensor, neg_score: torch.Tensor, margin: torch.Tensor):
-        loss = (-(pos_score.squeeze().relu()) +
-                neg_score.squeeze().relu() +
-                margin.squeeze().relu()).clamp(min=0)
+        loss = (-(pos_score.squeeze().relu().clamp(min=cls.EPS)) +
+                neg_score.squeeze().relu().clamp(min=cls.EPS) +
+                margin.squeeze().relu().clamp(min=cls.EPS)).clamp(min=0)
         return loss.sum()
