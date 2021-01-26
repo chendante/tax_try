@@ -199,18 +199,21 @@ class Sampler(Dataset):
             ids_list = []
             token_type_ids_list = []
             attn_masks = []
+            pool_matrices = []
             predecessor = predecessors[0]
             for i, path in enumerate(self.att_paths):
                 if path[0] == predecessor:
                     label = i
-                ids, token_type_ids, attn_mask = self.encode_path([node] + path)
+                ids, token_type_ids, attn_mask, pool_matrix = self.encode_path([node] + path)
                 ids_list.append(ids)
                 token_type_ids_list.append(token_type_ids)
                 attn_masks.append(attn_mask)
+                pool_matrices.append(pool_matrix)
             assert label >= 0
             path_group[node] = dict(ids=torch.stack(ids_list, dim=0),
                                     token_type_ids=torch.stack(token_type_ids_list, dim=0),
-                                    attn_masks=torch.stack(attn_masks, dim=0), label=label)
+                                    attn_masks=torch.stack(attn_masks, dim=0),
+                                    pool_matrices=torch.stack(pool_matrices, dim=0), label=label)
         self._eval_path_group = path_group
         return path_group
 
