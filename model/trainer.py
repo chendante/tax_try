@@ -83,7 +83,8 @@ class SupervisedTrainer(object):
                 with torch.no_grad():
                     output = self.model(input_ids=data["ids"][begin:end, ...].cuda(),
                                         token_type_ids=data["token_type_ids"][begin:end, ...].cuda(),
-                                        attention_mask=data["attn_masks"][begin:end, ...].cuda())
+                                        attention_mask=data["attn_masks"][begin:end, ...].cuda(),
+                                        pool_matrix=data["pool_matrices"][begin:end, ...].cuda())
                 outputs.extend(output)
             outputs = torch.stack(outputs, dim=0)
             index = outputs.squeeze().argmax().cpu()
