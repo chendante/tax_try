@@ -133,7 +133,10 @@ class Sampler(Dataset):
         for path in self.leaf_paths:
             self._training_paths.append(path)
             self._labels.append(1)
-            neg_nodes = random.sample(self._tax_graph.all_leaf_nodes(), self._neg_times)
+            while True:
+                neg_nodes = random.sample(self._tax_graph.all_leaf_nodes(), self._neg_times)
+                if path[1] not in neg_nodes and path[0] not in neg_nodes:
+                    break
             for neg_node in neg_nodes:
                 self._training_paths.append(path[0:1] + self.node2path[neg_node])
                 self._labels.append(0)
