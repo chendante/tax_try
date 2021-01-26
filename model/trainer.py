@@ -15,7 +15,8 @@ class SupervisedTrainer(object):
                                      dic_path=args.dic_path,
                                      padding_max=args.padding_max,
                                      margin_beta=args.margin_beta,
-                                     r_seed=args.r_seed)
+                                     r_seed=args.r_seed,
+                                     neg_times=args.neg_times)
         self.model = model.DBert.from_pretrained(args.pretrained_path,
                                                  # gradient_checkpointing=True,
                                                  output_attentions=False,  # 模型是否返回 attentions weights.
