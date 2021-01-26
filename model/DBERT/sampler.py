@@ -210,7 +210,7 @@ class Sampler(Dataset):
         input_ids, type_ids, attn_masks = self.encode_path(path)
         return dict(input_ids=input_ids,
                     type_ids=type_ids,
-                    attn_masks=attn_masks,
+                    attention_mask=attn_masks,
                     labels=torch.FloatTensor([label]))
 
     def encode_path(self, path):
