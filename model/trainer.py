@@ -48,9 +48,11 @@ class SupervisedTrainer(object):
                 else:
                     soft_optimizer.zero_grad()
                 pos_output = self.model(input_ids=batch["pos_ids"].cuda(), token_type_ids=batch["pos_type_ids"].cuda(),
-                                        attention_mask=batch["pos_attn_masks"].cuda())
+                                        attention_mask=batch["pos_attn_masks"].cuda(),
+                                        pool_matrix=batch["pos_pool"].cuda())
                 neg_output = self.model(input_ids=batch["neg_ids"].cuda(), token_type_ids=batch["neg_type_ids"].cuda(),
-                                        attention_mask=batch["neg_attn_masks"].cuda())
+                                        attention_mask=batch["neg_attn_masks"].cuda(),
+                                        pool_matrix=batch["neg_pool"].cuda())
                 loss = self.model.margin_loss_fct(pos_output, neg_output,
                                                   batch["margin"].cuda() if epoch >= soft_epochs else torch.zeros(
                                                       batch["margin"].size()).cuda())
@@ -63,10 +65,10 @@ class SupervisedTrainer(object):
                 else:
                     soft_optimizer.step()
                 loss_all += loss.item()
-            print(epoch, loss_all/len(data_loader))
-            if epoch >= self.args.epoch_be and (loss_all/len(data_loader)) <= self.args.break_loss:
+            print(epoch, loss_all / len(data_loader))
+            if epoch >= self.args.epoch_be and (loss_all / len(data_loader)) <= self.args.break_loss:
                 break
-            if epoch > 5 and (loss_all/len(data_loader)) > self.args.bad_loss:
+            if epoch > 5 and (loss_all / len(data_loader)) > self.args.bad_loss:
                 return 0, 0, 0
         self.model.eval()
         testing_data = self.sampler.get_eval_data()

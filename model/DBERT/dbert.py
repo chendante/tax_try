@@ -9,7 +9,6 @@ class DBert(BertPreTrainedModel):
     def __init__(self, config: BertConfig):
         super().__init__(config)
         self.bert = BertModel(config)
-        self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.classifier = nn.Linear(config.hidden_size, 1)
         self.loss_fct = nn.BCEWithLogitsLoss()
         self.init_weights()
@@ -19,6 +18,7 @@ class DBert(BertPreTrainedModel):
             input_ids=None,
             attention_mask=None,
             token_type_ids=None,
+            pool_matrix=None,
             head_mask=None,
             labels=None,
     ):
@@ -28,16 +28,15 @@ class DBert(BertPreTrainedModel):
             token_type_ids=token_type_ids,
             head_mask=head_mask,
         )
-        pooled_output = outputs[1]
-        pooled_output = self.dropout(pooled_output)
-        logits = self.classifier(pooled_output)
+        sequence_output = outputs[0]
+        logits = torch.bmm(pool_matrix.unsqueeze(1), sequence_output)
         if labels is not None:
             return self.loss_fct(logits, labels)
         return logits
 
     @classmethod
     def margin_loss_fct(cls, pos_score: torch.Tensor, neg_score: torch.Tensor, margin: torch.Tensor):
-        loss = (-(pos_score.squeeze().relu().clamp(min=cls.EPS)) +
-                neg_score.squeeze().relu().clamp(min=cls.EPS) +
-                margin.squeeze().relu().clamp(min=cls.EPS)).clamp(min=0)
+        loss = (-(pos_score.squeeze().relu()) +
+                neg_score.squeeze().relu() +
+                margin.squeeze().relu()).clamp(min=0)
         return loss.sum()
