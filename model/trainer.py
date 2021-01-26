@@ -33,7 +33,7 @@ class SupervisedTrainer(object):
                                        lr=self.args.lr,  # args.learning_rate - default is 5e-5
                                        eps=self.args.eps  # args.adam_epsilon  - default is 1e-8
                                        )
-        data_loader = dataloader.DataLoader(self.sampler, batch_size=16, shuffle=True, drop_last=True)
+        data_loader = dataloader.DataLoader(self.sampler, batch_size=32, shuffle=True, drop_last=True)
         # 创建学习率调度器
         scheduler = transformers.get_linear_schedule_with_warmup(optimizer,
                                                                  num_warmup_steps=0,
