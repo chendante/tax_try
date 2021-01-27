@@ -237,19 +237,17 @@ class Sampler(Dataset):
                     margin=torch.FloatTensor([margin * self._margin_beta]))
 
     def encode_path(self, path):
-        des_sent = self._word2des[path[0]][0]
-        des_ids = self._tokenizer.encode(des_sent)
         def_ids_l = [self._tokenizer.convert_tokens_to_ids(self._tokenizer.tokenize(w)) for w in path]
-        pooling_matrix = [0.0] * len(des_ids) + [1.0 / float(len(def_ids_l[0]))] * len(def_ids_l[0])
+        pooling_matrix = [0.0] + [1.0 / float(len(def_ids_l[0]))] * len(def_ids_l[0])
         def_ids = []
         for def_id in def_ids_l:
             def_ids.extend(def_id)
             def_ids += [1]
-        input_ids = des_ids + def_ids + [self._tokenizer.sep_token_id]
+        input_ids = [self._tokenizer.cls_token_id] + def_ids + [self._tokenizer.sep_token_id]
         input_len = len(input_ids)
         assert input_len <= self._padding_max
         input_ids = input_ids + [self._tokenizer.pad_token_id] * (self._padding_max - input_len)
-        token_type_ids = [0] * len(des_ids) + [1] * (input_len - len(des_ids)) + [0] * (self._padding_max - input_len)
+        token_type_ids = [0] * self._padding_max
         attention_mask = [1] * input_len + [0] * (self._padding_max - input_len)
         pooling_matrix = pooling_matrix + [0] * (self._padding_max - len(pooling_matrix))
         return torch.LongTensor(input_ids), torch.LongTensor(token_type_ids), torch.LongTensor(

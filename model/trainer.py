@@ -72,7 +72,7 @@ class SupervisedTrainer(object):
                 return 0, 0, 0
         self.model.eval()
         testing_data = self.sampler.get_eval_data()
-        eval_max = 500  # 根据GPU能力进行设置
+        eval_max = 1000  # 根据GPU能力进行设置
         count, mrr, wu_p = 0, 0, 0
         for node, data in testing_data.items():
             outputs = []
