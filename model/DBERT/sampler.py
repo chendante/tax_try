@@ -14,7 +14,7 @@ class TaxStruct(nx.DiGraph):
     def __init__(self, edges):
         all_edges = self.get_edges_with_root(edges)
         super().__init__(all_edges)
-        self.ave_depth()
+        # self.ave_depth()
         self.check_useless_edge()
 
     @classmethod
