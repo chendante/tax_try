@@ -14,6 +14,7 @@ class TaxStruct(nx.DiGraph):
     def __init__(self, edges):
         all_edges = self.get_edges_with_root(edges)
         super().__init__(all_edges)
+        self.ave_depth()
         self.check_useless_edge()
 
     @classmethod
@@ -25,6 +26,21 @@ class TaxStruct(nx.DiGraph):
             if entity not in children:
                 edges_with_root.append((cls.root, entity))
         return edges_with_root
+
+    def ave_depth(self):
+        l_nodes = self.all_leaf_nodes()
+        de = 0
+        max_de = 0
+        for node in self.nodes:
+            if node == self.root:
+                continue
+            path = nx.shortest_path(self, source=self.root, target=node)
+            de += len(path)
+            max_de = max(max_de, len(path))
+            if len(path) == 10:
+                print(node)
+        print(de/(len(self.nodes) - 1) - 1, max_de - 1)
+        print("aaa")
 
     def check_useless_edge(self):
         """
@@ -46,7 +62,7 @@ class TaxStruct(nx.DiGraph):
 
     def all_leaf_nodes(self):
         # 根据是否只要单一父节点的叶节点可进行更改
-        return [node for node in self.nodes.keys() if self.out_degree(node) == 0 and self.in_degree(node) == 1]
+        return [node for node in self.nodes.keys() if self.out_degree(node) == 0]
 
     def all_paths(self, less_len):
         """
