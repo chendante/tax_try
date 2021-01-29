@@ -235,7 +235,7 @@ class Sampler(Dataset):
     def encode_path(self, path):
         def_ids_l = [self._tokenizer.convert_tokens_to_ids(self._tokenizer.tokenize(w)) for w in path]
         def_ids = []
-        for def_id in def_ids_l:
+        for def_id in def_ids_l[0:2]:
             def_ids.extend(def_id)
             def_ids += [1]
         input_ids = [self._tokenizer.cls_token_id] + def_ids + [self._tokenizer.sep_token_id]
